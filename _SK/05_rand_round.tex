@@ -1,0 +1,286 @@
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Randomizované zaokrúhľovanie}
+
+Budeme ďalej pokračovať v rovnakej schéme ako doteraz:
+máme riešiť optimalizačný problém. Zapíšeme si ho ako celočíselný program. Vyriešime
+jeho relaxovanú verziu. Rozmýšľame, čo s tým. 
+Ak sme  napríklad v pôvodnom celočíselnom programe mali premenné $x_i\in\{0,1\}$, 
+ktoré sme si interpretovali ako indikátory, či je $i$-ta vec vybraná, v relaxovanom 
+programe máme $0\le x_i\le1$, čo nás láka predstavovať si hodnoty $x_i$ ako pravdepodobnosť,
+že je $i$-ta vec vybraná. V tejto časti ukážeme, ako túto intuíciu využiť na navrhovanie algoritmov.
+Všeobecný postup bude taký, že zaokrúhľovací algoritmus nebude deterministický, ale pravdepodobnostný.
+V prvom kroku ukážeme, že v očakávanom prípade dostaneme dobré riešenie a v druhom kroku ukážeme,
+ako vyrobiť deterministický zaokrúhľovací algoritmus, ktorý vždy vráti riešenie rovnako dobré, ako
+randomizovaný algoritmus v očakávanom prípade (tento proces budeme volať {\em derandomizácia}).
+Ako vždy, aj teraz použijeme konkrétny príklad:
+
+\subsection*{\maxsat}
+
+\noindent
+V časti o celočíselnom lineárnom programovaní sme spomínali rozhodovací 
+problém \sat (Definícia~\ref{dfn:sat}).
+Uvažujme teraz jeho optimalizačnú verziu:
+
+\begin{framed}
+\begin{dfn}
+  \label{dfn:maxsat}
+  Majme $n$ logických premenných $x_1,\ldots,x_n\in\{true,false\}$. {\em
+  Literál} je premenná $x_i$ alebo jej negácia $\neg{x_i}$. {\em Klauzula} je
+  dizjunkcia literálov $C=l_1\vee l_2\vee\cdots\vee l_{k_C}$.  Formula v {\em
+  konjunktívnej normálne forme} (CNF) je konjunkcia klauzúl $F=C_1\wedge
+  C_2\wedge\cdots\wedge C_m$. Problém \maxsat je optimalizačný problém, v ktorom
+  je na vstupe daná formula $F$  v CNF, pričom každá klauzula $C_i$ má  
+  nezápornú cenu $\omega_i$. Úlohou je 
+  nájsť priradenie pravdivostných hodnôt premenným $x_1,\ldots,x_n$ tak, aby 
+  súčet váh splnených klauzúl bol maximálny.
+\end{dfn}
+\end{framed}
+
+
+\noindent
+Ak je $F$ splniteľná a všetky váhy sú jednotkové, optimum je $m$, takže keby sme vedeli riešiť \maxsat,
+vedeli by sme riešiť aj \sat. V ďalšom označme celkovú váhu všetkých klauzúl $Z$, t.j.
+$$Z=\sum_{i=1}^m\omega_i.$$
+Ľahko vidno, že v každom prípade môžme dosiahnuť váhu $Z/2$: najprv nastavíme všetky premenné 
+na $0$. Ak sme dosiahli aspoň $Z/2$, všetko je v poriadku. Ak nie, nastavíme všetky premenné na 1.
+Každá klauzula, ktorá predtým nebola splnená, teraz splnená bude, takže máme garantovane váhu aspoň $Z/2$.
+Skúsme teraz uvažovať, či vieme spraviť algoritmus s lepšou garanciou; ukážeme, ako garantovať 
+$3/4$ celkovej váhy.
+
+
+\noindent
+Začnime najprv s úplne jednoduchým randomizovaným algoritmom \alg{A1}, ktorý vôbec lineárne programovanie nepoužíva,
+ale nastaví každú premennú na 1 nezávisle s pravdepodobnosťou $1/2$.
+Aká je váha splnených klauzúl v očakávanom prípade? Označme túto váhu $W$: $W$ je náhodná premenná
+a zaujíma nás jej stredná hodnota 
+$\ev{W}$.
+Nech $X_i$ je indikátorová
+náhodná premenná, ktorá je $1$, ak je $C_i$ splnená a $0$ inak. Platí
+$$W=\sum_{i=1}^m\omega_iX_i$$
+a preto z linearity strednej hodnoty
+$$\ev{W}=\ev{\sum_{i=1}^m\omega_iX_i}=\sum_{i=1}^m\omega_i\ev{X_i}
+=\sum_{i=1}^m\omega_i\pr{X_i=1}.$$
+
+\noindent
+Pre klauzulu $C_i$ označme $s(C_i)$ jej veľkosť, t.j. počet literálov v nej.
+Aká je pravdepodobnosť, že konkrétna klauzula $C_i$ je splnená? Klauzula je splnená vtedy,
+keď je splnený aspoň jeden z jej literálov. Keďže každá premenná $x_i$ je nastavená nezávisle\footnote{%
+zdôrazňujeme, že náhodné premenné $X_i$ nie sú nezávislé} s pravdepodobnosťou $1/2$,
+pravdepodobnosť, že $C_i$ je {\em nesplnená} je $2^{-s(C_i)}$, a teda
+$\pr{X_i=1}=1-2^{-s(C_i)}$. Predpokladajme teraz, že každá klauzula má aspoň $k$ literálov.
+Potom algoritmus \alg{A1} v očakávanom prípade získa váhu aspoň
+\begin{equation}
+\label{eq:maxsat:A1}
+\ev{W}=\sum_{i=1}^m\omega_i\pr{X_i=1}=\sum_{i=1}^m\omega_i\left(1-2^{-s(C_i)}\right)\ge(1-2^{-k})Z.
+\end{equation}
+Vo všeobecnom prípade, keď formula môže mať klauzuly veľkosti 1, sme si nijak nepomohli -- stále máme
+garanciu $Z/2$. Pre väčšie hodnoty $k$ však dostávame lepšie výsledky. 
+
+\subsubsection*{Derandomizácia}
+
+\noindent
+Z predchádzajúcej časti máme randomizovaný algoritmus, ktorý v očakávanom prípade splní klauzuly
+s váhou
+$(1-2^{-k})Z$, ak každá klauzula má aspoň $k$ literálov. Otázka znie, ako zostrojiť deterministický algoritmus,
+ktorý by mal rovnakú garanciu, t.j. vždy dosiahol váhu aspoň $(1-2^{-k})Z$. 
+Algoritmus \alg{A1} používa $n$ náhodných bitov. V procese derandomizácie ho budeme postupne modifikovať
+tak, že prvých $i$ bitov (postupne pre $i=1,2,\ldots$) zafixujeme a zvyšné ponecháme náhodné.
+Dostaneme algoritmus používajúci $n-i$ náhodných bitov a chceme, aby jeho očakávaná hodnota neklesla.
+Keď zafixujeme
+všetkých $n$ bitov, dostaneme deterministický algoritmus.
+
+\noindent
+Ako zafixovať prvý bit? 
+Ak nastavíme napr. $x_1=1$, pre očakávanú hodnotu platí
+$$\ev{W\mid x_1=1}=\sum_{i=1}^m\omega_i\pr{X_i=1\mid x_1=1}.$$
+Zoberme si $i$-tu klauzulu. Aká je pravdepodobnosť, že $C_i$ je splnená, ak $x_1=1$? Ak $C_i$
+obsahuje literál $x_i$, je pravdepodobnosť 1, ak obsahuje literál $\overline{x_i}$, je táto
+pravdepodobnosť $1-2^{1-s(C_i)}$ a inak ostala rovnaká $1-2^{-s(C_i)}$.
+Rovnako sa dá zrátať hodnota $\ev{W\mid x_1=0}$. Pretože $x_1$ bolo nastavené na 1 s pravdepodobnosťou $1/2$,
+je
+$$\ev{W} = \frac{1}{2}\ev{W\mid x_1=0} + \frac{1}{2}\ev{W\mid x_1=1},$$
+a teda jedna z $\ev{W\mid x_1=0}$, $\ev{W\mid x_1=1}$ je aspoň tak veľká ako $\ev{W}$.
+Dostali sme algoritmus, ktorý používa $n-1$ náhodných bitov a má v očakávanom
+prípade cenu aspoň \ev{W}.
+
+
+\noindent
+Derandomizovaný algoritmus \alg{A1det} bude pracovať v $n$ iteráciách, pričom v $t$-tej iterácii 
+si bude pamätať konštanty $c_1,\ldots,c_{t-1}$. Pre všetky $C_i$ zráta 
+$\pr{X_i=1\mid x_1=c_1,\ldots,x_{t-1}=c_{t-1},x_t=0}$ a
+$\pr{X_i=1\mid x_1=c_1,\ldots,x_{t-1}=c_{t-1},x_t=1}$. Na základe toho  toho zráta očakávané hodnoty
+$\ev{W\mid x_1=c_1,\ldots,x_{t-1}=c_{t-1},x_t=0}$
+a $\ev{W\mid x_1=c_1,\ldots,x_{t-1}=c_{t-1},x_t=1}$ a podľa toho, ktorá je väčšia, nastaví $c_t$.
+Po $n$ iteráciách budú hodnoty $c_1,\ldots,c_n$ tvoriť riešenie.
+
+\noindent
+Rovnaký proces derandomizácie (nazývaný {\em metóda podmienených pravdepodobností}) sa dá použiť
+vždy, ak vieme algoritmicky zrátať očakávanú hodnotu pôvodného randomizovaného algoritmu
+pri zafixovaných prvých $i$ bitoch, aj keď náhodné rozhodnutia môžu mať rôzne pravdepodobnosti:
+
+\begin{veta}
+\label{thm:derandom}
+Majme randomizovaný algoritmus \alg{A_R} riešiaci v polynomiálnom čase optimalizačný problém ${\cal P}$, pričom
+na vstupe \bm{x} urobí $R(\bm{x})$ 
+náhodných rozhodnutí $r_1,r_2,\ldots,r_{R(\bm{x})}$;
+rozhodnutia sú nezávislé binárne náhodné premenné s $\pr{r_i=1}=p_i$. 
+Predpokladajme, že existuje polynomiálny algoritmus,
+ktorý pre ľubovoľné $i$ a konštanty $c_1,\ldots,c_i\in\{0,1\}$
+vyráta $\ev{\alg{A_R}(\bm{x})\mid b_1=c_1,\ldots,b_i=c_i}$. Potom existuje deterministický algoritmus,
+ktorý v polynomiálnom čase nájde riešenie aspoň tak dobré, ako $\ev{\alg{A_R}(\bm{x})}$.
+\end{veta}
+
+\noindent
+Vo všeobecnom  prípade sa v jednej iterácii derandomizovaného algoritmu využije
+\begin{align*}
+\ev{W\mid r_1=c_1,\ldots,r_{i-1}=c_{i-1}}=&
+p_i\ev{W\mid r_1=c_1,\ldots,r_{i-1}=c_{i-1},r_i=1} +\\
+&(1-p_i)\ev{W\mid r_1=c_1,\ldots,r_{i-1}=c_{i-1},r_i=0},
+\end{align*}
+odkiaľ vyplýva, že bez ohľadu na $p_i$ je
+aspoň jedna z očakávaných hodnôt pre $r_i=1$, $r_i=0$  aspoň tak veľká ako 
+pôvodná očakávaná hodnota.
+
+\subsubsection*{Algoritmus pre krátke klauzuly}
+
+\noindent
+Vráťme sa k problému \maxsat. 
+Keby každá klauzula mala aspoň dva literály, algoritmus \alg{A1det} dosiahne aspoň $3/4$ celkovej váhy $Z$.
+Problémom ostávajú jednoliterálové klauzuly. Pre čitateľa znalého rozhodovacieho problému \sat to na prvý
+pohľad môže vyzerať iba ako kozmetický problém: ak máme rozhodnúť splniteľnosť, jednoliterálové klauzuly nám 
+iba pomáhajú, pretože určujú hodnotu, ktorú príslušná premenná musí mať v každom splňujúcom ohodnotení.
+Keď ale formula splniteľná nie je a chceme splniť čo najväčšiu váhu klauzúl, táto dobrá vlastnosť sa stráca
+a jednoliterálové klauzuly môžu spôsobovať problémy.
+
+\noindent
+Tu príde do hry lineárne programovanie. Skúsme zapísať problém \maxsat ako celočíselný lineárny program.
+Celkom prirodzene majme pre každú premennú $x_i$ zo vstupnej formuly premennú $p_i\in\{0,1\}$. Cieľom je
+maximalizovať váhu splnených klauzúl, a preto si spravme pre každú klauzulu $C_i$ premennú $z_i\in\{0,1\}$,
+ktorá bude určovať, či je $C_i$ splnená. Cieľom je maximalizovať $\sum_{i=1}^m\omega_iz_i$ a obmedzenia
+musia zabezpečiť, aby $z_i$ bolo 1 iba vtedy, keď je $C_i$ splnená, t.j. ak žiaden literál z $C_i$  nie je splnený,
+$z_i$ musí byť 0. Označme $C^+$ indexy premenných, ktoré sa
+v klauzule $C$ vyskytujú v pozitívnej forma a $C^-$ indexy tých premenných, ktoré sú v $C$ negované. Dostávame
+nasledovný program:
+
+
+\begin{equation}
+\label{LP:maxsat:prog1}
+\begin{array}{rrcll}
+{\rm maximalizovať}     & \multicolumn{1}{l}{ \sum\limits_{i=1}^m\omega_iz_i}\\[3ex]
+{\rm pri\ obmedzeniach} & \sum\limits_{j\in C_i^+}p_j + \sum\limits_{j\in C_i^-}(1-p_j) &\ge&z_i& \;\;\;
+                            \forall i=1,\ldots,m \\
+                        & z_i,p_i&\in&\Z
+\end{array}
+\end{equation}
+
+\noindent
+a jeho relaxovanú verziu
+
+\begin{equation}
+\label{LP:maxsat:prog2}
+\begin{array}{rrcll}
+{\rm maximalizovať}     & \multicolumn{1}{l}{ \sum\limits_{i=1}^m\omega_iz_i}\\[3ex]
+{\rm pri\ obmedzeniach} & \sum\limits_{j\in C_i^+}p_j + \sum\limits_{j\in C_i^-}(1-p_j) &\ge&z_i& \;\;\;
+                            \forall i=1,\ldots,m \\
+                        & z_i,p_i&\ge&0\\
+                        & z_i,p_i&\le&1\\
+\end{array}
+\end{equation}
+
+\noindent
+Konečne sa dostávame k jadru tejto kapitoly -- randomizovanému zaokrúhľovaniu. Algoritmus \alg{A2}
+vyrieši program 
+(\ref{LP:maxsat:prog2}), čím dostane optimálne hodnoty $p_i^\star$, $z_i^\star$  a každú premennú $x_i$ 
+nastaví na 1 nezávisle s pravdepodobnosťou $p_i^\star$.
+Aká je očakávaná hodnota algoritmu \alg{A2}? Rovnako ako pri algoritme \alg{A1} označme $W$
+celkovú cenu algoritmu a $X_i$ indikátor, či je splnená $i$-ta klauzula a odhadujme
+$$\ev{W}
+=\sum_{i=1}^m\omega_i\pr{X_i=1}.$$
+Klauzula $C_i$ je nesplnená, ak nie je splnený žiaden z jej literálov. Pozitívny literál $x_j$
+je nesplnený s pravdepodobnosťou $1-p_j^\star$ a negatívny $\overline{x_j}$ s pravdepodobnosťou 
+$p_j^\star$, takže 
+\begin{eqnarray}
+\label{eq:maxsat:1}\pr{X_i=1}&=&1-\prod_{j\in C_i^+}(1-p_j^\star)\cdot\prod_{j\in C_i^-}p_j^\star\\
+\label{eq:maxsat:2}&\ge&1-\left(\frac{\sum_{j\in C_i^+}(1-p_j^\star)+\sum_{j\in C_i^-}p_j^\star}{s(C_i)}\right)^{s(C_i)}\\
+&=&1-\left(1-\frac{\sum_{j\in C_i^+}p_j^\star+\sum_{j\in C_i^-}(1-p_j^\star)}{s(C_i)}\right)^{s(C_i)}\notag\\
+\label{eq:maxsat:3}&\ge&1-\left(1-\frac{z_i^\star}{s(C_i)}\right)^{s(C_i)}
+\end{eqnarray}
+kde nerovnosť (\ref{eq:maxsat:2}) je aplikáciou aritmeticko-geometrickej nerovnosti
+$$\frac{a_1+\cdots+a_n}{n}\ge\sqrt[n]{a_1\cdot\cdots\cdot a_n}$$
+a nerovnosť (\ref{eq:maxsat:3})
+vyplýva z obmedzení programu (\ref{LP:maxsat:prog2}). Našim ďalším bezprostredným cieľom bude 
+vyjadriť odhad na \pr{X_i=1} z riadku (\ref{eq:maxsat:3}) v lineárnom tvare, t.j.
+$\pr{X_i=1}\ge\beta z_i^\star$ pre nejaké $\beta$, ktoré môže závisieť od $C_i$, ale nezávisí od $z_i^\star$.
+Označme si 
+$$g_k(z):=1-\left(1-\frac{z}{k}\right)^k$$
+funkciu premennej $z$ s parametrom $k\ge1$. Máme $g_k(0)=0$ a  $g_k(k)=1$. Priamočiaro zrátame
+\begin{eqnarray*}
+g'_k(z) &=& \left(1-\frac{z}{k}\right)^{k-1} \\
+g''_k(z) &=& -\frac{k-1}{k-z}\left(1-\frac{z}{k}\right)^{k-2},
+\end{eqnarray*}
+takže vidíme, že $g_k(z)$ je 
+na intervale $[0,k]$ rastúca ($g'_k(z)>0$) a konkávna ($g''_k(z)<0$). Preto celý graf na intervale $[0,1]$ 
+leží nad priamkou 
+prechádzajúcou bodmi $[0,0]$ a $[1,g_k(1)]$.
+Preto pre $z\in[0,1]$ platí $g_k(z)\ge g_k(1)z$. Keď sa vrátime k nerovnosti (\ref{eq:maxsat:3}),
+dostávame
+
+
+\noindent
+\begin{minipage}[t]{0.5\textwidth}
+$$\pr{X_i=1}\ge g_{s(C_i)}(1)z_i^\star.$$
+Označme $$\beta(k):=g_k(1)=1-\left(1-\frac{1}{k}\right)^k$$ funkciu premennej $k$.
+Pre očakávanú cenu algoritmu \alg{A2} máme
+\begin{equation}
+\label{eq:maxsat:A2}
+\ev{W}\ge\sum_{i=1}^m\omega_i\beta\left(s(C_i)\right)z_i^\star.
+\end{equation}
+S rastúcim $k$ hodnota $\beta(k)$ klesá, preto ak všetky klauzuly majú najviac $k$ literálov, máme
+$$\ev{W}\ge\beta(k)\sum_{i=1}^m\omega_iz_i^\star.$$
+\end{minipage}\hspace*{0.05\textwidth}\begin{minipage}[t]{0.45\textwidth}
+\begin{myfig}{\textwidth}{svg/maxsat1}
+\end{myfig}
+\end{minipage}
+
+\vspace*{-3ex}
+\noindent
+Môžeme použiť vetu~\ref{thm:derandom} a vyrobiť deterministický algoritmus \alg{A2det};
+príslušné podmienené pravdepodobnosti sa budú rátať analogicky, podľa riadku (\ref{eq:maxsat:1}).
+
+\subsubsection*{Výsledný algoritmus s garanciou $3/4$ }
+
+\noindent
+Máme teraz dva algoritmy: \alg{A1det}, ktorý funguje dobre na inštanciách s dlhými klauzulami a 
+\alg{A2det}, ktorý funguje dobre na inštanciách s krátkymi klauzulami. Čo môžeme robiť 
+na inštanciách, ktoré majú dlhé aj krátke klauzuly?
+Urobíme prirodzenú vec: spustíme obidva algoritmy a z výsledkov vyberieme ten lepší.
+Z (\ref{eq:maxsat:A1}) a (\ref{eq:maxsat:A2}) a z vety~\ref{thm:derandom} dostávame pre 
+ceny algoritmov \alg{A1det} a \alg{A2det} na formule $F$:
+\begin{align*}
+  \alg{A1det}(F) & \ge \sum_{i=1}^m\omega_i\left(1-\frac{1}{2^{s(C_i)}}\right) &
+\alg{A2det}(F) & \ge \sum_{i=1}^m\omega_i\beta\left(s(C_i)\right)z_i^\star
+\end{align*}
+Označíme $\alpha(k):=1-2^{-k}$ a 
+lepší z nich (t.j. maximum) odhadneme zdola priemerom:
+
+\noindent
+\begin{minipage}[t]{0.4\textwidth}
+  \begin{flalign*}
+    &\max\{\alg{A1det}(F), \alg{A2det}(F)\}&\\
+    \ge &\frac{1}{2} (\alg{A1det}(F)+ \alg{A2det}(F))& \\
+    \ge &\frac{1}{2}\sum_{i=1}^m\omega_i\left(\beta(s(C_i))z_i^\star+\alpha(s(C_i))\right)&\\
+    \ge &\sum_{i=1}^m\omega_iz_i^\star\left(\frac{\alpha(s(C_i))+\beta(s(C_i))}{2}\right)\\
+  \end{flalign*}
+\end{minipage}\hspace*{0.1\textwidth}\begin{minipage}[t]{0.5\textwidth}
+\begin{myfig}{0.96\textwidth}{svg/maxsat2}
+\end{myfig}
+\end{minipage}
+
+\vspace*{-1ex}
+\noindent
+kde posledná nerovnosť vyplýva z toho, že $z_i^\star\le 1$. Pozrime sa teraz na $i$-tu klauzulu;
+nech $s(C_i)=k$. Ako vyzerá priemer $\frac{1}{2}(\alpha(k)+\beta(k))$?
+Pre $k\in\{1,2\}$ je $\frac{1}{2}(\alpha(k)+\beta(k))=\frac{3}{4}$. Pre $k\ge2$ je to rastúca funkcia,
+takže môžme uzavrieť, že
+$$\max\{\alg{A1det}(F), \alg{A2det}(F)\}\ge\frac{3}{4}\sum_{i=1}^m\omega_iz_i^\star\ge\frac{3}{4}OPT.$$
+

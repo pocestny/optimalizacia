@@ -1,0 +1,219 @@
+\documentclass[titlepage,10pt]{book}
+%\usepackage[pdfpagelabels,draft,implicit=false]{hyperref}
+\usepackage{ifthen}
+
+\providecommand\documentlanguage{SK}
+
+
+
+\usepackage[utf8]{inputenc}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage{colortbl}
+\usepackage{a4wide}
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage{xspace}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+\usepackage{eurosym}
+\usepackage[usenames]{xcolor}
+\usepackage{calc}
+%\usepackage{framed}
+\usepackage{mdframed}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{hvfloat}
+\usepackage{multirow}
+\usepackage{algorithmicx}
+\usepackage[ruled]{algorithm}
+\usepackage{algpseudocode}
+\usepackage{mathrsfs}
+\usepackage{refcount}
+\usepackage{fncychap}
+%\usepackage[english]{babel}
+%\usepackage{blindtext}
+\usepackage{pgffor}
+\usepackage{fontawesome}
+
+\usepackage{etoolbox}
+\BeforeBeginEnvironment{framed}{\vskip 1ex\begin{minipage}{\linewidth}}
+\AfterEndEnvironment{framed}{\end{minipage}\vskip 1ex}
+
+\usetikzlibrary{intersections}
+\usetikzlibrary{arrows,matrix,positioning,decorations.pathreplacing}
+
+\ifthenelse{ \equal{\documentlanguage}{SK} }{
+  \usepackage[slovak]{babel}
+  %\usepackage[babel=true,kerning=true]{microtype}
+  \usetikzlibrary{babel}
+}{}
+
+\newcommand{\ie}{i.e.,\xspace}
+
+\makeatletter
+\renewcommand{\DOCH}{}
+\renewcommand{\DOTI}[1]{%
+  \vspace*{-2.1cm}
+  \hrule
+  \vskip 3mm
+  {\huge\bfseries\thechapter}\hfill{\LARGE\bfseries #1}
+  \vskip 3mm
+  \hrule
+  \par\nobreak
+\vskip 40\p@}
+\makeatother
+
+
+\usepackage{chngcntr}
+\counterwithout{equation}{chapter}
+
+\newmdenv[linewidth=1pt]{framed}
+\newmdenv[backgroundcolor=shadecolor,hidealllines=true ]{shaded}
+
+\newcommand{\todo}[1]{ }
+
+
+
+\renewcommand{\mod}{\ensuremath{\mathrm{mod\ }}}
+\renewcommand{\neg}[1]{\overline{#1}}
+\newcommand{\algA}{{\tt A}\xspace}
+
+\newcommand{\probname}[1]{\hbox{\sc #1}\xspace}
+\newcommand{\sat}{\probname{Sat}}
+\newcommand{\maxsat}{\probname{Max-Sat}}
+\newcommand{\maxcut}{\probname{Max-Cut}}
+\newcommand{\minvcover}{\probname{Min-Vertex-Cover}}
+\newcommand{\maxflow}{\probname{Max-Flow}}
+\newcommand{\maxWBmatching}{\probname{Max-Weighted-Bipartite-Matching}}
+\newcommand{\maxis}{\probname{Max-Independent-Set}}
+\newcommand{\minmulticut}{\probname{Min-Multi-Cut}}
+\newcommand{\mincut}{\probname{Min-Cut}}
+\newcommand{\minfactor}{\probname{Min-1-Factor}}
+\newcommand{\binpacking}{\probname{Bin-Packing}}
+\newcommand{\mingap}{\probname{Generalized-Assignment}}
+\newcommand{\minsforest}{\probname{Min-Steiner-Forest}}
+\newcommand{\member}{\probname{2D-Membership}}
+\newcommand{\multiwaycut}{\probname{Min-Multiway-Cut}}
+\newcommand{\kcut}{\probname{Min-$k$-Cut}}
+\newcommand{\knapsack}{\probname{Max-Knapsack}}
+\newcommand{\Qknapsack}{\probname{Max-Q-Knapsack}}
+\newcommand{\minpartition}{\probname{Min-Partition}}
+
+\newcommand{\pair}[2]{\ensuremath{\left\langle #1,#2\right\rangle}}
+\newcommand{\bpair}[2]{\ensuremath{\left\langle\bm{#1},\bm{#2}\right\rangle}}
+
+\newcommand{\dom}{\ensuremath{{\cal D}}\xspace}
+
+\newcommand{\NP}{\ensuremath{NP}\xspace}
+\newcommand{\APX}{\ensuremath{APX}\xspace}
+\newcommand{\PTAS}{\ensuremath{PTAS}\xspace}
+\newcommand{\FPTAS}{\ensuremath{FPTAS}\xspace}
+\renewcommand{\P}{\ensuremath{P}\xspace}
+
+\newcommand{\bm}[1]{\mbox{\boldmath{$\rm#1$}}}
+\newcommand{\tr}{\ensuremath{^{\sf T}}}
+\newcommand{\opt}{\ensuremath{OPT}\xspace}
+\newcommand{\T}{\ensuremath{{\cal T}}}
+\newcommand{\R}{{\mathbb R}}
+\newcommand{\Z}{{\mathbb Z}}
+\renewcommand{\S}{\ensuremath{\mathscr{S}}}
+
+
+\newcommand{\alg}[1]{\ensuremath{\mathtt{#1}}\xspace}
+
+
+\newcommand{\ev}[1]{\ensuremath{{\mathrm E}\left[#1\right]}}
+\newcommand{\pr}[1]{\ensuremath{\mathrm{Pr}\left[#1\right]}}
+\newcommand{\Deg}{\ensuremath{\mathrm{deg}}}
+
+\newcommand{\cvect}[1]{\ensuremath{\left(\begin{array}{c}#1\end{array}\right)}}
+
+\newcommand{\common}{}
+\newcommand{\commonii}{}
+\newcommand{\axes}{}
+\newdimen\picx
+\newdimen\picy
+
+\newcounter{dummy} \numberwithin{dummy}{chapter}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% slovak stuff
+\ifthenelse{ \equal{\documentlanguage}{SK} }{
+\newtheorem{veta}[dummy]{Veta}
+\newtheorem{veta-star}[dummy]{$\star$ Veta}
+\newtheorem{lema}[dummy]{Lema}
+\newtheorem{dosl}[dummy]{Dôsledok}
+
+\theoremstyle{definition}
+\newtheorem{dfn}[dummy]{Definícia}
+\newtheorem{clm}[dummy]{Tvrdenie}
+\newtheorem*{ozn}{Označenie}
+\newtheorem*{prob}{Cvičenie}
+
+\newenvironment{dokaz}{\begin{proof}[{\bfseries Dôkaz:}]}{\end{proof}}
+\newenvironment{dokazpar}[1]{\begin{proof}[{\bfseries Dôkaz #1:}]}{\end{proof}}
+\newcommand{\bulpar}{\vskip 4pt\noindent{\bf $\bullet$ }}
+
+}{% english stuff
+%  \newcommand{\ie}{i.e.,\xspace}
+
+\newtheorem{veta}[dummy]{Theorem}
+\newtheorem{veta-star}[dummy]{$\star$ Theorem}
+\newtheorem{lema}[dummy]{Lemma}
+\newtheorem{dosl}[dummy]{Corollary}
+
+\theoremstyle{definition}
+\newtheorem{dfn}[dummy]{Definition}
+\newtheorem{clm}[dummy]{Claim}
+\newtheorem*{ozn}{Notation}
+\newtheorem*{prob}{Exercise}
+
+\newenvironment{dokaz}{\begin{proof}[{\bfseries Proof:}]}{\end{proof}}
+\newenvironment{dokazpar}[1]{\begin{proof}[{\bfseries Proof #1:}]}{\end{proof}}
+\newcommand{\bulpar}{\vskip 4pt\noindent{\bf $\bullet$ }}
+
+}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\newenvironment{myfig}[2]{\vskip 4pt\noindent\begin{center}\includegraphics[width=#1]{#2.pdf}\\[1ex]
+  \begin{minipage}[t]{0.9\textwidth}\bgroup\small}{%
+  \egroup\end{minipage}\end{center}\vskip 4pt\noindent}
+
+\newenvironment{myfiglabel}[3]{\vskip 4pt\noindent
+    \phantom{aa}\hfill
+    \begin{minipage}[c]{#1-4ex}
+      \vskip 0pt
+      \includegraphics[width=\textwidth]{#2.pdf}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[c]{4ex}
+      \vskip 0pt
+      \begin{equation}\label{#3}~\end{equation}
+    \end{minipage}
+    \vskip 1ex
+    \begin{center}
+  \begin{minipage}[t]{0.9\textwidth}\bgroup\small}{%
+  \egroup\end{minipage}\end{center}\vskip 4pt\noindent}
+
+\newcommand{\mycaption}[1]{\vskip 1ex\noindent{\small #1}\vskip 4pt\noindent}
+
+
+
+\newcommand{\optional}{{\LARGE$\star$ }}
+
+\newcommand{\IGNORE}[1]{}
+\newcommand{\TODO}{\vskip 1ex\noindent{\em plánované}}
+
+
+\newcommand{\tmp}{}
+
+\bibliographystyle{abbrv}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+\nocite{A99,WS11,GLS88,MG07,SST06,KM72,V04,Ch83,Bland77,LBILS01,H99,ST04,BBC04,EF03,L94}
+\input{_\documentlanguage/main.tex}
+\newpage
+\bibliography{references}
+\end{document}
+

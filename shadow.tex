@@ -1,0 +1,168 @@
+\newcommand{\faceT}[3]{\draw[face] (v#1) -- (v#2) -- (v#3) -- cycle; }
+\newcommand{\faceQ}[4]{\draw[face] (v#1) -- (v#2) -- (v#3) -- (v#4) -- cycle; }
+\newcommand{\faceP}[5]{\draw[face] (v#1) -- (v#2) -- (v#3) -- (v#4) -- (v#5) -- cycle; }
+\newcommand{\faceS}[6]{\draw[face] (v#1) -- (v#2) -- (v#3) -- (v#4) -- (v#5) -- (v#6) -- cycle; }
+
+\newcommand{\tmpvec}[4]{
+    \draw[thick,red,->]
+    (#1) -- coordinate (mid) ($ (#1) + (#2) $);
+    \draw[fill=black] (#1) circle (0.6pt) node [below=4pt, black] {#3};
+    \node [anchor=south,red] at (mid) {#4};
+
+  }
+
+
+\begin{center}
+  \tdplotsetmaincoords{80}{10}
+  \begin{tikzpicture}[scale=2.3,tdplot_main_coords]
+
+    \coordinate (v1) at ( 0.098148, 1.315036,  0.627859);
+    \coordinate (v2) at ( 1.348569, -0.000557,  0.425867);
+    \coordinate (v3) at ( -1.289792, -0.534572,  -0.650170);
+    \coordinate (v4) at ( 0.906291, -1.260214,  -0.285596);
+    \coordinate (v5) at ( 0.862122, 0.955805,  0.706217);
+    \coordinate (v6) at ( -0.997535, -1.073127,  -0.802253);
+    \coordinate (v7) at ( 1.162205, -0.994616,  -0.084187);
+    \coordinate (v8) at ( -1.263039, 0.086707,  -0.359741);
+    \coordinate (v9) at ( -0.503439, -1.342548,  -0.768410);
+    \coordinate (v10) at ( -0.680657, 0.849360,  0.170420);
+    \coordinate (v11) at ( 0.060013, 0.461626,  0.673989);
+    \coordinate (v12) at ( 0.791863, -0.308369,  0.555766);
+    \coordinate (v13) at ( -0.752325, -0.620919,  -0.074020);
+    \coordinate (v14) at ( 0.533005, -1.045626,  0.139359);
+    \coordinate (v15) at ( 0.507154, 0.251374,  0.719851);
+    \coordinate (v16) at ( -0.581272, -0.936126,  -0.163032);
+    \coordinate (v17) at ( 0.682788, -0.890175,  0.257240);
+    \coordinate (v18) at ( -0.736667, -0.257295,  0.095963);
+    \coordinate (v19) at ( -0.292086, -1.093814,  -0.143224);
+    \coordinate (v20) at ( -0.395809, 0.189073,  0.406257);
+    \coordinate (v21) at ( 0.055710, -0.078977,  0.550938);
+    \coordinate (v22) at ( 0.289348, -0.384593,  0.486054);
+    \coordinate (v23) at ( -0.420460, -0.528261,  0.196564);
+    \coordinate (v24) at ( 0.204785, -0.687756,  0.321740);
+    \coordinate (v25) at ( -0.275369, -0.709392,  0.160201);
+    \coordinate (v26) at ( -0.256582, -0.155937,  0.417331);
+    \coordinate (v27) at ( 0.397235, -0.149936,  -0.400718);
+    \coordinate (v28) at ( 0.615677, -0.244497,  -0.374613);
+    \coordinate (v29) at ( 0.243147, -0.354227,  -0.542127);
+    \coordinate (v30) at ( 0.604557, -0.495540,  -0.492066);
+    \coordinate (v31) at ( 0.325407, -0.508119, -0.585981 );
+
+    \def\bot{-1.5}
+    
+    \coordinate (w1) at ( 0.098148, 1.315036, \bot );
+    \coordinate (w2) at ( 1.348569, -0.000557, \bot );
+    \coordinate (w3) at ( -1.289792, -0.534572, \bot );
+    \coordinate (w4) at ( 0.906291, -1.260214, \bot );
+    \coordinate (w5) at ( 0.862122, 0.955805, \bot );
+    \coordinate (w6) at ( -0.997535, -1.073127, \bot );
+    \coordinate (w7) at ( 1.162205, -0.994616, \bot );
+    \coordinate (w8) at ( -1.263039, 0.086707, \bot );
+    \coordinate (w9) at ( -0.503439, -1.342548, \bot );
+    \coordinate (w10) at ( -0.680657, 0.849360, \bot );
+    \coordinate (w11) at ( 0.060013, 0.461626, \bot );
+    \coordinate (w12) at ( 0.791863, -0.308369, \bot );
+    \coordinate (w13) at ( -0.752325, -0.620919, \bot );
+    \coordinate (w14) at ( 0.533005, -1.045626, \bot );
+    \coordinate (w15) at ( 0.507154, 0.251374, \bot );
+    \coordinate (w16) at ( -0.581272, -0.936126, \bot );
+    \coordinate (w17) at ( 0.682788, -0.890175, \bot );
+    \coordinate (w18) at ( -0.736667, -0.257295, \bot );
+    \coordinate (w19) at ( -0.292086, -1.093814, \bot );
+    \coordinate (w20) at ( -0.395809, 0.189073, \bot );
+    \coordinate (w21) at ( 0.055710, -0.078977, \bot );
+    \coordinate (w22) at ( 0.289348, -0.384593, \bot );
+    \coordinate (w23) at ( -0.420460, -0.528261, \bot );
+    \coordinate (w24) at ( 0.204785, -0.687756, \bot );
+    \coordinate (w25) at ( -0.275369, -0.709392, \bot );
+    \coordinate (w26) at ( -0.256582, -0.155937, \bot );
+    \coordinate (w27) at ( 0.397235, -0.149936, \bot );
+    \coordinate (w28) at ( 0.615677, -0.244497, \bot );
+    \coordinate (w29) at ( 0.243147, -0.354227, \bot );
+    \coordinate (w30) at ( 0.604557, -0.495540, \bot );
+    \coordinate (w31) at ( 0.325407, -0.508119, \bot );
+    
+    \draw[black] (-2,-2,\bot) -- (2,-2,\bot) -- (2,2,\bot) -- (-2,2,\bot) -- cycle;
+    
+    \draw[black,fill=gray!80, fill opacity=0.8] (w1)
+      \foreach \i in {5,2,7,4,9,6,3,8,10}
+      { -- (w\i) }
+      -- cycle;
+
+    \foreach \i in {1,...,31}
+    \draw[black!30!green,dotted, fill=black] (v\i) circle (.3pt) 
+    %node [black,anchor=north] {\tiny \i}
+    -- (w\i) circle (.3pt) 
+    %node [black,anchor=north] {\tiny \i}
+    ;
+
+    
+
+    \IGNORE{
+    \draw[blue,thick] (0,0,0) -- (0,0,1.2) node {z}
+    (0,0,0) -- (0,1.2,0) node {y}
+    (0,0,0) -- (1.2,0,0) node {x};
+    }
+
+ %invisible   
+    \tikzset{face/.style = {black, dashed, very thin}}
+    
+    \faceP{30}{31}{29}{27}{28}
+    \faceQ{10}{1}{11}{20}
+    \faceQ{27}{29}{8}{10}
+    \faceT{27}{1}{10}
+    \faceT{29}{3}{8}
+    \faceQ{31}{29}{3}{6}
+    \faceQ{30}{28}{2}{7}
+    \faceQ{1}{5}{28}{27}
+    \faceT{28}{2}{5}
+    \faceT{31}{6}{9}
+    \faceT{30}{4}{7}
+
+ % visible
+    \tikzset{face/.style = {black!90!blue, very thin, fill=yellow!80,fill opacity=0.4}}
+
+    \faceQ{31}{30}{4}{9}
+    
+    \faceQ{5}{1}{11}{15}
+    \faceQ{5}{2}{12}{15}
+    \faceQ{7}{4}{14}{17}
+    \faceQ{9}{4}{14}{19}
+    \faceQ{9}{6}{16}{19}
+    \faceQ{7}{2}{12}{17}
+    \faceQ{6}{3}{13}{16}
+    \faceQ{8}{3}{13}{18}
+    \faceQ{20}{18}{23}{26}
+    \faceQ{10}{8}{18}{20}
+    \faceT{18}{13}{23}
+    \faceQ{16}{13}{23}{25}
+    \faceT{19}{16}{25}
+    \faceQ{19}{14}{24}{25}
+    \faceT{17}{14}{24}
+    \faceQ{17}{12}{22}{24}
+    \faceQ{15}{12}{22}{21}
+    \faceQ{20}{11}{21}{26}
+    \faceT{15}{11}{21}
+    \faceS{24}{25}{23}{26}{21}{22}
+   
+    \def\len{0.6}
+    \tmpvec{v3}{-\len,-\len,0}{$\bm{x_0}$}{$\bm{\alpha}$}
+    \tmpvec{w3}{-\len,-\len,0}{ }{ }
+    \tmpvec{v2}{\len,0,0}{$\;\;\bm{x^\star}$}{$\bm{c}$}
+    \tmpvec{w2}{\len,0,0}{ }{ }
+
+    \draw[thick,fill=black] (v3)
+    \foreach \i in {6,9,4,7,2}
+    { circle (0.6pt) -- (v\i) }
+    circle(0.6pt);
+    
+    \draw[thick,fill=black] (w3)
+    \foreach \i in {6,9,4,7,2}
+    { circle (0.6pt) -- (w\i) }
+    circle(0.6pt);
+
+    \draw (-.6,-.6,.6) node {\LARGE $\cal D$};
+
+  \end{tikzpicture}
+\end{center}
+

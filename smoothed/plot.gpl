@@ -1,0 +1,25 @@
+#!/bin/bash
+
+cat <<EOF
+set term pdf enhanced color
+set output "$1"
+
+unset xtics
+unset ytics
+unset ztics
+
+set xyplane at 0
+set zrange [0:250]
+set cbrange [0:250]
+
+
+set pm3d at s hidden3d  depthorder 
+unset hidden3d 
+unset surf
+
+
+unset colorbox
+set palette defined (0 0 0 0, 0.1 0 0 1, 0.3 0 1 1, 0.4 1 1 0, 1 1 0 0)
+
+splot "$2" matrix  linecolor rgb "black" notitle
+EOF

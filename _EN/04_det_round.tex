@@ -1,0 +1,706 @@
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Deterministic rounding}
+
+In the previous chapter we applied the following general scheme for design of $r$-approximation 
+algorithms, to the \minvcover problem:
+
+
+\begin{myfig}{0.7\textwidth}{svg/generalminrelax_en}
+\end{myfig}
+
+\noindent
+When looking for  the minimum of the ILP with value $m^\star$, we first find the (possibly smaller)
+minimum of the relaxed program with the value $m^\star_Q$, ''round'' it, and obtain a solution with value $m$.
+If we can prove that the ''rounding'' procedure increases the value of the solution at most $r$-times, we have
+a guaranteed $r$-approximation algorithm. What we called ''rounding'' does not have to be the arithmetic rounding 
+of the entries as was the case in the \minvcover algorithm in the previous section; any deterministic procedure 
+is fine. We show an example of a more involved rounding procedure.
+
+\subsection*{\minmulticut}
+
+As a motivation example let us consider the following problem \footnote{see 
+\cite{BBC04,EF03}}: 
+we are given a collection of texts with references to various persons. Our goal is to 
+distinguish when two places refer to the same person. This is not as easy as it may appear for
+the first sight, since the same person can be referred to by her full name, nickname, or indirectly
+by her position (e.g. "Her Majesty") and so on. Let us suppose that we have at our disposal 
+(possibly as an output of some machine learning algorithms on a training data set)
+a predictor in the form of a real-valued function over the pairs of references: for given two references, the higher
+positive is the outcome, the more probably both references describe the same person; the lower negative the value
+is, the higher is the probability that the two references are of two different persons. A value of 0 means that
+even the predictor has no clue. We can then construct a graph where the vertices are the references, and 
+the edges are labeled by positive or negative weights. Our goal is to separate the vertices into clusters such that
+each cluster represents one person. Since the predictor is not fully reliable, it is not always possible to find
+a clustering consistent with it. Hence, we want to find a clustering that minimizes the inconsistence:
+the sum of (absolute values of) the weights of positive edges connecting two clusters, and negative edges 
+connecting two vertices in the same cluster.
+
+\begin{myfig}{0.3\textwidth}{svg/clustering}
+  A graph and its clustering with weight 8: the positive edges with weights 4 and 1 connect two distinct clusters,
+  and a negative edge with weight -3 is connects two vertices in a single cluster.
+\end{myfig}
+
+\noindent
+The task to find a clustering with minimum weight is \NP-hard, so we settle with an approximate solution. 
+Let us transform the graph as follows: we keep the positive edges. For each negative edge $(u,v)$ with weight $-w$,
+we add a new vertex $\langle u,v\rangle$ connected with $v$ by an edge of weight $w$. We get a graph 
+with positive edge weights in which we want to solve the following problem: remove edges with minimum 
+overall weight such that in the remaining graph no two vertices $\langle u,v\rangle$ and $u$ are
+in the same connected component.
+
+\begin{prob}
+  Prove that this transformation is equivalent, i.e. prove that for a solution of the original problem with 
+  weight $c$ there is a solution of the transformed problem with the same weight and vice versa.
+\end{prob}
+
+\begin{myfig}{0.7\textwidth}{svg/clustering2}
+  Original and transformed graphs (since the original graph is undirected, the transformation
+  is not unique). The added vertices are green, dotted lines connect vertices that must end in 
+  different components. 
+\end{myfig}
+
+\noindent
+The transformed problem is a special case of the \minmulticut problem:
+
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:multicut}
+    Given is a simple graph $G=(V,E)$ with non negative edge weights, i.e. a function 
+    $\omega:E\mapsto \R^+$, and $k$ pairs of vertices from $V$: $(s_i,t_i)$, $i=1,\ldots,k$.
+    The goal of the problem \minmulticut is to remove from $G$ a set of edges with minimum overall
+    weight such that in the resulting graph no pair of vertices $(s_i,t_i)$ is contained in the same
+    connectivity component.
+  \end{dfn}
+\end{framed}
+
+\begin{myfig}{0.55\textwidth}{svg/multicut}
+  A solution of an instance on \minmulticut problem with cost 12.
+\end{myfig}
+
+\noindent
+A special case of this problem for $k=1$ is the \mincut problem, which can be solved in polynomial time. 
+However for bigger values of $k$, the \minmulticut problem is \NP-hard. Let us now try to formulate
+\minmulticut as an ILP. Introduce  an indicator variable $x_e\in\{0,1\}$ for each edge $e$, such that
+$x_e=1$ means the edge was removed. The expression $\sum_{e\in E}x_e\omega(e)$ then gives the
+overall weight of removed edges. What remains is to formulate linear constraints that would ensure
+that each $(s_i,t_i)$ are in different components. Denote ${\cal P}_{s_i,t_i}$ the set of all $s_i-t_i$-paths
+i.e. all paths in $G$ that start in $s_i$ and end in $t_i$; we need to remove an edge from each of them. 
+Hence, we obtain the following program (we don't have to write the constraints $x_e\le1$ explicitly
+since they are implied by the minimization: for a feasible solution with some $x_e>1$, setting $x_e:=1$ 
+keeps all the constraints satisfied, and the value of the utility function is not increased):
+
+
+\begin{equation}
+\label{LP:multicut:prog1}
+\begin{array}{rrcll}
+  {\rm minimize}     & \multicolumn{1}{l}{ \sum\limits_{e\in E}x_e\omega_e}\\
+  {\rm subject\ to} & \sum\limits_{e:e\in\pi}x_e&\ge&1& \;\;\;
+                              \forall i\in\{1,\ldots,k\},\;\; \forall \pi\in {\cal P}_{s_i,t_i}\\
+                          & x_e&\ge&0& \;\;\;\forall e\in E\\
+                          & x_e&\in&\Z
+\end{array}
+\end{equation}
+
+
+\noindent
+We now relax the program (\ref{LP:multicut:prog1}) by removing the constraints $x_e\in\Z$, yielding
+a linear program
+
+\begin{equation}
+\label{LP:multicut:prog2}
+\begin{array}{rrcll}
+  {\rm minimize}     & \multicolumn{1}{l}{ \sum\limits_{e\in E}x_e\omega_e}\\
+  {\rm subject\ to} & \sum\limits_{e:e\in\pi}x_e&\ge&1& \;\;\;
+                              \forall i\in\{1,\ldots,k\},\;\; \forall \pi\in {\cal P}_{s_i,t_i}\\
+                          & x_e&\ge&0& \;\;\;\forall e\in E\\
+\end{array}
+\end{equation}
+
+\noindent
+that can be interpreted as follows: imagine the edges as a system of pipes. 
+Assign a length $x_e$ to each edge $e$, in  such a way that each pair $(s_i,t_i)$
+has distance (measured as usual as the length of the shortest path) 
+at least 1. Moreover, if we let $\omega_e$ to be the area of a cross-section of edge $e$, 
+the utility function $\sum_{e\in E}x_e\omega_e$ gives the overall volume of the edges. It means we
+want to assign lengths as to minimize the overall volume while keeping the prescribed pairs of vertices
+far apart; naturally, we want to make thick edges short, and thin edges long.
+The relaxed program has still one problem: it has exponentially many constraints, so the simplex algorithm 
+cannot be used to solve it efficiently. In fact, this is not a major obstacle since there are methods 
+for efficient solving of linear programs provided there is a polynomial-time feasibility oracle: a procedure that 
+for a given solution either tells it is feasible, or returns a constraint that is violated. 
+To make this text self-contained, and to show an idea that may be of independent interest,
+we transform the program into an equivalent one with only polynomially many constraints.
+Consider independently each $i$. Instead of an explicit constraint $\sum_{e\in\pi}x_e\ge1$ for
+each path $\pi\in{\cal P}_{s_i,t_i}$, we assign (introducing new variables) a potential  $p_v^{(i)}\in\R$
+to each vertex $v$, such that $p_{t_i}^{(i)}-p_{s_i}^{(i)}\ge1$. Hence, for every path
+$\pi: s_i=v_1,v_2,\ldots,v_z=t_i$ we get a sequence of vertex-potentials  
+$p_{v_1}^{(i)},p_{v_2}^{(i)},\ldots,p_{v_z}^{(i)}$. If we enforce that the length of an edge is 
+at least the difference of the potentials, i.e. $x_{(v_j,v_{j+1})}\ge p_{v_{j+1}}^{(i)}-p_{v_j}^{(i)}$,
+we can conclude that every path has length at least one. Instead of the program (\ref{LP:multicut:prog2})
+we thus can solve the program:
+
+\begin{equation}
+\label{LP:multicut:prog3}
+\begin{array}{rrcll}
+  {\rm minimize}     & \multicolumn{1}{l}{ \sum\limits_{e\in E}x_e\omega_e}\\
+  {\rm subject\ to} & x_e&\ge&p_v^{(i)}-p_u^{(i)}& \;\;\;
+                              \forall i\in\{1,\ldots,k\},\;\; \forall e\in E, \;e=(u,v)\\
+                          & x_e&\ge&p_u^{(i)}-p_v^{(i)}\\
+                          & p_{t_i}^{(i)}-p_{s_i}^{(i)}&\ge&1& \;\;\;
+                              \forall i\in\{1,\ldots,k\}\\
+\end{array}
+\end{equation}
+
+\noindent
+On one hand, every feasible solution of the program  (\ref{LP:multicut:prog3}) satisfies the constraints
+of the program  (\ref{LP:multicut:prog2}), on the other hand, for a given solution of the program
+(\ref{LP:multicut:prog2}), we can just set the potentials  $p_{v}^{(i)}$ to be the distance (w.r.t. the values $x_e$ )
+of $v$ from $s_i$. It is easy to see that these potentials fulfill the requirements of the program 
+ (\ref{LP:multicut:prog3}), so the two programs are equivalent.
+
+
+
+\noindent
+The program (\ref{LP:multicut:prog3}) can be solved e.g. by a simplex algorithm, obtaining an optimal solution
+with variables  $x_e^\star$, and the cost $m_Q^\star=\sum_{e\in E}x_e^\star\omega_e$.
+If all the $x_e^\star\in\{0,1\}$, we would have a solution of the program (\ref{LP:multicut:prog1}), and thus
+of the \minmulticut. If we try the graph from the previous example, we see that the optimum of  
+(\ref{LP:multicut:prog3}) is integral. This looks promising. Let us continue with the following experiment:
+take all  $510 489$ cubic (i.e. each vertex has three neighbors) graphs on $20$ vertices, set all weights to 1, and
+for each of the graphs we randomly select $k\in\{1,\ldots,20\}$ pairs $s_i, t_i$. The results 
+are as follows: from among the  $510 489$ instances, $268 178$ ($52.5\%$) have the relaxed program with integral
+optimal solution,  $135 328$ ($26.5\%$) half-integral, and overall there are $458 008$ ($89.7\%$) instances with
+the smallest non-zero value of the optimal solution $\ge\frac{1}{4}$.
+So if we simply round everything non-zero up, in $89.7\%$ we get a $4$-approximation at the worst. 
+Before getting too enthusiastic, let us have a look at the remaining  $10.3\%$ of instances. It may actually 
+happen that these cases are not so rare as they appear, and it is only due to the selection of our dataset that
+they are scarcely populated. The bad instances have the common feature that there are many pairs  $s_i,t_i$ 
+(large $k$).  So let us take an arbitrary graph, and try to solve an instance where the $s_i,t_i$ pairs are all
+pairs of vertices with distance at least four.
+
+
+\begin{myfig}{\textwidth}{svg/multicut2}
+  The graph on the left has 20 vertices and 30 edges (all edges have weight 1). Consider an instance
+  of \minmulticut where all vertices with distance at least four must be disconnected (the diameter of the graph
+  is 5, and there are 22 paris with distance at least four). The optimal solution of the relaxed LP
+  is in the middle (the numbers are multiplies of $\frac{1}{15}$) with cost $7$. Since only 5 edges (the dotted ones)
+  in the solutions have zero value, by rounding everything up we get a solution with cost 25. On the right there is
+  an integral solution with cost 8: after removing the eight dotted edges, the graph is split into three connected 
+  components, and each of them has diameter at most three.
+\end{myfig}
+
+
+\noindent
+Since we see that a simple ''round-everything-nonzero-up'' approach can yield poor results, it is time to think
+about a more refined ''rounding'' procedure. Denote  $m^\star$ the optimum cost of the \minmulticut solution;
+ti holds  $m_Q^\star\le m^\star$. We show how to ''round'' the values of $x_e^\star$ (i.e. how to select edges
+into the cut) in such a way that the obtained solution of the \minmulticut instance has cost at most 
+$4\ln(2k)m_Q^\star$.
+
+\noindent
+Our ''rounding'' algorithm iteratively ''bites out'' sets $V_1,v_2,\ldots,V_k$ out of the graph. 
+In the first iteration, the algorithm finds a set $V_1$ such that  $s_1\in V_1$, $t_1\not\in V_1$, and 
+no pair  $s_i, t_i$ is included in $V_1$. Edges separating $V_1$ from the remainder of the graph are
+added into the cut, and the vertex set is shrunk to $V-V_1$. In the $i$-th iteration, if either $s_i$ or $t_i$
+are not present in the remaining vertices (at least one of them is present there) then $V_\emptyset$, else
+find $V_i$ such that $s_i\in V_i$ and $t_i\not\in V_i$, and no pair $s_j,t_j$ is contained in $V_i$. 
+The vertices $V_i$ are then removed from the graph (i.e. edges separating $V_i$ from the remaining vertices are
+added to the cut), and the next iteration starts. This way, the algorithm constructs a cut that separates every pair 
+$s_i, t_i$. The question is how to select the sets $V_i$, and how the knowledge of the optimal solution of the relaxed
+program can help in it. 
+
+
+\noindent
+Consider the values  $x_e^\star$, and imagine the optimum solution of (\ref{LP:multicut:prog2} as a network of 
+pipes: the edge $e$ forms a pipe with length  $x_e^\star$, and cross-section $\omega_e$, so it has volume
+$\omega_ex_e^\star$ For an edge $e=(u,v)$ denote the distance $d(u,v)=x_e^\star$, and in a natural way extend the 
+notion of the distance to any two vertices $d(v_1,v_2)$. When the algorithm selects a set $V_i$, it has to cut all
+the pipes that connect $V_i$ with the rest of the graph, and to cut a single pipe $e$ it has to pay a cost proportional
+to the cross-section $\omega_e$. From the feasibility of the relaxed solution we know that $d(s_i,t_i)\ge 1$ for
+all pairs $s_i,t_i$. Moreover, the optimum solution of  (\ref{LP:multicut:prog2}) minimizes the overall volume of edges, i.e.
+$$\Psi:=\sum_{e=(u,v)\in E}\omega_ed(u,v)$$
+Denote  by $G_r'=(V_r',E_r')$ the graph obtained by removing the sets $V_1,\ldots,V_{r-1}$ from $G$.
+Define the ball with radius $\rho$ centered in a vertex $v$ in a natural way:
+$${\cal B}_\rho(v)=\{u\in V_r'\mid d(u,v)\le\rho\}$$
+If $G_r'$ contains both $s_i$, and $t_i$, the selected set $V_r$ will be some ball with a suitable radius
+$\rho$ centered in $s_r$. It remains to show how to set the value of $\rho$. To start with, we want 
+$\rho<1/2$: this ensures that no pair $s_j,t_j$ will be included in $V_r$ (the distance between $s_i$, and $t_i$ 
+is at least 1). Let the interior edges of the ball are
+$${\cal E}_\rho(v)=\{(w,z)\in E_r'\mid w,z\in{\cal B}_\rho(v)\}$$
+and the edge boundary is
+$$\overline{\cal E}_\rho(v)=\{(w,z)\in E_r'-{\cal E}_\rho(v)\mid w\in{\cal B}_\rho(v)\vee z\in{\cal B}_\rho(v)\}$$
+When defining the volume of a ball, we add to it, from technical reasons that become apparent in a moment, 
+a term  $\Psi/k$:
+$$V_\rho(v)=\frac{\Psi}{k}+\sum_{(w,z)\in{\cal E}_\rho(v)}\omega_{(w,z)}d(w,z)+
+\sum_{(w,z)\in\overline{\cal E}_\rho(v)}\omega_{(w,z)}\left(\rho-\min(d(v,w),d(v,z))\right)$$
+The interior edges of a ball contribute their full volume to the volume of the ball, and the edges from the
+boundary contribute the respective part. We are, of course, interested in the cost of the ball, i.e. the size
+of its edge-cut:
+
+\noindent
+\begin{minipage}[t]{0.5\textwidth-1cm}
+\noindent
+$$C_\rho(v)=\sum_{(w,z)\in\overline{\cal E}_\rho(v)}\omega_{(w,z)}$$
+We are finally getting to the point how to set the radius $\rho$ for the set $V_r$. We want to cut out a ball 
+with minimum unit cost, i.e.
+$$F_\rho(v)=\frac{C_\rho(v)}{V_\rho(v)}$$
+The mapping $F:\rho\mapsto F_\rho(v)$ for a fixed vertex $v$ is discontinuous in values  $\rho$
+for which there exists a vertex $w$ with distance $\rho$ from $v$. On every interval between the discontinuity points
+$F$ is differentiable and decreasing. Hence, it is easy to find the minimum of $F_\rho(s_i)$ on the interval
+$(0,1/2)$: just take the smallest of the values $F_\rho(s_i)$ for $\rho=\delta(s_i,u)-\varepsilon$.
+It remains to show that the cut obtained this way is in fact a good approximation. To this end we show
+the following statement: 
+\end{minipage}\hspace*{1cm}\begin{minipage}[t]{0.5\textwidth}
+\begin{myfig}{0.7\textwidth}{svg/multicut3}
+  The interpretation of the relaxed solution as a network of pipes. The edges are labeled by their
+  length  ($x_e^\star$), and the cross-section  ($\omega_e$) is in parentheses. The ball with radius 
+  $0.4$ has cost $13$ and volume  $\frac{\Psi}{k}+4.65$. If the radius is increased to $0.6$,
+  the cost remains the same, but the volume is increased.
+\end{myfig}
+\end{minipage}
+\noindent
+\begin{equation}
+\label{eq:cut1}
+\forall v\exists\rho<1/2:\;F_\rho(v)\le2\ln(2k)
+\end{equation}
+
+\begin{myfig}{\textwidth}{svg/multicut4}
+  The mapping $F$ for one vertex $v$ from the previous example (the lengths are multiples of $1/15$). 
+  The overall volume (cost of the optimum solution) is $\Psi=7$, and $k=22$. Up to the radius  
+  $\frac{2}{15}\approx 0.13$, the interior of the ball is empty and the size of the cut is 3, so 
+  for $0\le\rho<\frac{2}{15}$ we have $F_\rho(v)=\frac{3}{\frac{7}{22}+3\rho}$. For 
+  $\frac{2}{15}\le\rho<\frac{3}{15}=0.2$ the interior contains two vertices and an edge of length  $\frac{2}{15}$;
+  th size of the cut is $4$, so on this interval we have 
+  $F_\rho(v)=\frac{4}{\frac{7}{22}+\frac{2}{15}+2\rho+2(\rho-\frac{2}{15)}}\approx\frac{4}{0.18+4\rho}$. 
+  Then up to the radius $\frac{5}{15}=\frac{1}{3}$ the interior contains three vertices and two edges with
+  an overall volume $0.2$, while the cut has size 5, and so on.
+\end{myfig}
+
+\noindent
+The property (\ref{eq:cut1}) implies the required approximation: let the algorithm select balls 
+ ${\cal B}_{\rho_1}(s_{i_1}),\ldots,{\cal B}_{\rho_h}(s_{i_h})$. The cost of the cut is
+ $$m=\sum_{j=1}^hC(s_{i_j},\rho_j)\le2\ln(2k)\sum_{j=1}^hV(s_{i_j},\rho_j),$$
+where in the last sum the terms $\Psi/k$ from the definition of volume add up to at most $\Psi$,
+and the remaining terms in the volumes add up to at most another $\Psi$; hence,  $m\le2\ln(2k)2\Psi$.
+
+\vskip 4pt
+\noindent
+To finish the proof we prove the property (\ref{eq:cut1}): let us fix a vertex $v$ and consider all functions
+as dependent on the radius $\rho$. Whenever $V(\rho)$ is differentiable, it holds
+$V'(\rho)=C(\rho)$,and hence
+$$F(\rho)=\frac{V'(\rho)}{V(\rho)}=\left[\ln V(\rho)\right]'.$$
+We show (\ref{eq:cut1}) by contradiction: suppose that for each $\rho<1/2$ it holds 
+$F(\rho)>2\ln(2k)$. If $F$ is differentiable on the interval $(0,1/2)$, we have
+$$\left[\ln V(\rho)\right]'>2\ln(2k).$$
+Take the integral from $0$ to $1/2$ on both sides, and get
+$$\ln\frac{V\left(\frac{1}{2}\right)}{V(0)}>\ln2k$$
+yielding a contradiction
+$$V\left(\frac{1}{2}\right)>2kV(0)=2\Psi$$
+since $V(\rho)\le\Psi+\Psi/k$.
+If $F$ is not differentiable on the whole interval $(0,1/2)$, just repeat the previous steps 
+on each of the continuity interval (there are finitely many), and sum up the results.
+
+\vskip 2ex
+\noindent
+The preceding musings can be summarized as a statement:
+
+\begin{veta}
+  There is a polynomial-time algorithm for the problem \minmulticut, that always returns
+  a solution with cost at most $4\ln(2k)$ times the optimum.
+\end{veta}
+
+\noindent
+The guarantee we just proved seems to be quite weak, and we would expect that in many cases the we could 
+get a better approximation. Can we, however, prove a stronger guarantee? We now show that it is not possible.
+Take a regular graph $G$ with $n$ vertices, such that all vertices have degree $d\ge3$. Select some parameter
+$\alpha$, and consider and \minmulticut instance on $G$, in which all edges have weight 1, and the pairs
+$s_i, t_i$ that must be disconnected are all pairs of vertices with distance at least $\alpha$. Setting
+$x_e=\frac{1}{\alpha}$ for each edge $e$, we get a feasible solution of the program (\ref{LP:multicut:prog2}),
+hence  $m^\star_Q\le\frac{n}{\alpha}$. We show how to force any feasible integral solution to have cost at least $n$.
+Let $M$ be the optimum integral solutions, i.e. the set of edges whose removal disconnects all pairs of
+vertices with distance at least $\alpha$. After removing $M$ from $G$, we get a graph $G'=(V,E-M)$
+with some number of connected components, for which it holds
+
+\begin{lema}
+  Every connected component of $G'$ has at most $d^\alpha$ vertices.
+\end{lema}
+\begin{dokaz}
+  Suppose for the sake of contradiction that there is a component $K$ with more than $d^\alpha$ vertices.
+  Take any vertex $v\in K$. Since $v$ has degree $d$ in $G$, it has at most $d$ neighbors in $K$. Each of
+  them has again at most $d$ neighbors in $K$, implying that there may be at most $d+d(d-1)<d+d^2$ vertices
+  with distance at most $2$ from $v$. Let us continue by induction, getting that in $G$ (and thus also in $K$)
+  there may be at most
+   $d+d^2+\cdots+d^{\alpha-1}$ vertices with distance at most  $\alpha$ from $v$. However,
+   $1+d+d^2+\cdots+d^{\alpha-1}=\frac{d^\alpha-1}{d-1}<d^\alpha$, so, since $K$ has more than $d^\alpha$ vertices,
+   there is some vertex $w$ in $K$ that is from $v$ further than $\alpha$. But then $v$, and $w$ are not
+   allowed to
+   be in the same connected component, a contradiction.
+\end{dokaz}
+
+\noindent
+Now let $S_1,\ldots,S_h$ be connected components of $G'$. Denote $\delta(S)$ the edge boundary of a set $S$, 
+i.e. the edges with one endpoint in $S$, and the other outside. Since every edge has two endpoints, it holds
+$2|M|=\sum_{i=1}^h|\delta(S_i)|$. Moreover, since every vertex is in some connected component (only edges
+were removed), we have $\sum_{i=1}^h|S_i|=n$. In our next investigation we shall use a handy set of weird objects:
+expander graphs. They are graphs in which the edge boundary of any set is ''large''. 
+\noindent
+\begin{framed}
+  \begin{dfn}
+    A graph $G=(V,E)$ is called an {\em expander} if for any set $S\subset V$ of vertices
+    $$|\delta(S)|\ge\min \{ |S|, |\overline{S}|\},$$
+    where $\overline{S}=V-S$. 
+  \end{dfn}
+\end{framed}
+
+\noindent
+Now let us suppose that our graph $G$ is an expander, and set  $\alpha=\lfloor\log_d n/2\rfloor$. Since
+$d^\alpha\le n/2$, any connected component of  $(V,E-M)$ has at most  $n/2$ vertices, and thus we get
+$$|M|=\frac{1}{2}\sum_{i=1}^h|\delta(S_i)|\ge\frac{1}{2}\sum_{i=1}^h|S_i|=\frac{n}{2}.$$
+To sum it up, we have an instance on a $d$-regular graph with $n$ vertices, where the optimal cut has 
+$\Omega(n)$ edges, but there is relaxed solution with cost $O\left(\log d\frac{n}{log n}\right)$.
+At the same time, we have $k=\Theta(n^2)$ pairs of $s_i,t_i$, since for each vertex there are at least $n/2$
+vertices with distance at least $\alpha$. If we want to decouple the parameters $n$, and $k$, and
+make them independent, it is sufficient for some $\ell$ to replace each edge by a path of length $\ell$, and
+keep the set of pairs $s_i,t_i$. The number of vertices will grow, but the approximation ratio remains the same.
+So we see that no ''rounding'' algorithm that would work an all instances can have a better guarantee 
+than to get a $O(\log k)$-multiple of the optimum.
+
+\noindent
+The last thing that remains open is whether expanders actually do exist. They do, and there are actually many
+of them, but they are somewhat shy. It is quite hard to find a deterministic construction that would
+produce expanders. On the other hand, it is not too involved to prove (although we are not going to do it now)
+that the majority of regular graphs are expanders.
+
+\subsection*{Iterated rouning}
+
+\noindent
+In the case of \minvcover we solved the relaxed program, and we were able to show that in any basic
+solution each variable has some good property (in our case, it was half-integrality, i.e.  
+$x_i\in\{0,\frac{1}{2},1\}$), based on which we could bound the error of the rounding procedure.
+Now we shall look at a case when  this nice property holds only in some of the variables: we can 
+fix the values of variables we are happy with, create a smaller linear program from the remaining
+variables, solve it, and repeat the same approach. We end up with iteratively solving (hopefully)
+smaller and smaller programs, in each iteration fixing the values of some variables, until we get
+a solution.
+
+
+\noindent
+We show this technique on an example. Imagine a printing company that operates different printers
+(maybe based on different technologies, plotters, offset printers, laser printers, inkjets, etc.). 
+The company receives a contract to print a number of copies of a 
+number of different items (books, leaflets, stickers, etc.). Each such job can be possibly performed on
+several printers, incurring a different time and cost on each of them (e.g. a black and white text can be printed on
+an offset printer, a laser printer, or a color plotter; the last option, however, would take long and be
+quite expensive).  The whole contract has a deadline, and the goal is to schedule the jobs to printers
+in such a way that the deadline is met, and at the same time, the cost is minimized. This lead to the
+following generalized problem:
+
+\vbox{
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:mingap}
+    Given is a set $M$ of machines, and a set $J$ of jobs, where $|M|=m$, and $|J|=n$. Also, for each pair
+    $i\in M$, $j\in J$ there is given a time  $t_{ij}\ge 0$ and cost $c_{ij}\ge 0$ of processing job
+    $j$ on machine $i$. Finally, a number $T$ is given. The goal of the problem \mingap is to 
+    assign a machine $u_j\in M$ to each job $j\in J$, such that the overall cost of the assignment
+    $\sum_{j\in J}c_{u_jj}$ is minimized. Moreover, the overall processing time  must meet the 
+    deadline, i.e. for each machine  $i\in M$ it holds \hbox{$\sum_{j:u_j=i} t_{ij}\le T$.}
+  \end{dfn}
+\end{framed}
+}
+
+\noindent
+A natural visualization of the problem is a bipartite graph $G=(V,E)$, with bipartition $V=M\uplus J$,
+where of a pair $i\in M$, $j\in J$ there is an edge  $(i,j)\in E$, if  $t_{ij}\le T$.
+
+\begin{myfig}{0.65\textwidth}{svg/assignment}
+  Optimal assignment with cost $12$ for the deadline $T=10$. The first number on an edge denotes the 
+  corresponding processing cost, the second number the processing time.
+\end{myfig}
+
+\noindent
+The problem \mingap is hard to solve optimally. Even for a very special case where there are only two machines with
+the processing times of all jobs  equal on both of them, i.e. $p_{1j}=p_{2j}=p_j$, and $\sum_{j\in J}p_j=2T$,
+it is an \NP-complete problem to decide whether the jobs can be assigned to the machines in such a way that
+every machine has assigned exactly time $T$ (the problem is known as \probname{Min-Partition}\footnote{
+  The problem \probname{Min-Partition} is defined as follows: for a set of natural numbers  $A=\{a_1,\ldots,a_n\}$
+decide, whether there exists a partition  $A=B\uplus C$ such that $\sum_{x\in A}x=\sum_{x\in B}x$.}.
+This means we don't expect an efficient algorithm to optimally solve the \mingap. However, we present
+a solution of a somewhat easier task: imagine that our printing company promised the contract to be
+produced {\em ''in 5 to 10 days''}. We are going to solve the original task with the deadline $T=5$ days, 
+but it won't matter if the deadline is slightly overdue, unless it is ready within 10 days. In what 
+follows we present an algorithm for the \mingap problem that always finds solution with optimum cost, and the
+deadline may be overdue at most by a factor of 2 (i.e. the processing times of all machines are at most $2T$).
+It is important to note that this is not the same as solving the problem with limit $2T$ instead of $T$, 
+since we are comparing
+ourselves to the optimum of the original problem; the optimum cost of the problem with deadline $2T$ may
+be much much smaller.
+
+\noindent
+First, let us formulate the problem \mingap as ILP. For each pair $i\in M$, $j\in J$ such that
+$(i,j)\in E$ we introduce a selector variable $x_{ij}\in\{0,1\}$ which tells us whether the 
+job $j$ is assigned to machine $i$.  The Definition~\ref{dfn:mingap} directly translated to an
+ILP formulation:
+
+\begin{equation}
+\label{eq:mingap:ilp}
+\begin{array}{rrcll}
+  {\rm minimize}     & \multicolumn{1}{l}{ \sum\limits_{(i,j)\in E}x_{ij}c_{ij}}\\[3ex]
+  {\rm subject\ to} & \sum\limits_{i\in M} x_{ij}& = &1 & \;\;\; \forall j\in J\\[3ex]
+                          & \sum\limits_{j\in J} t_{ij}x_{ij}&\le & T & \;\;\; \forall i\in M\\[3ex]
+                          & \multicolumn{3}{c}{ x_{ij}\in\{0,1\}} & \;\;\; \forall i\in M, \; \forall j\in J
+                        %  & x_{ij} & \ge & 0 & \;\;\; \forall i\in M, \; \forall j\in J
+\end{array}
+\end{equation}
+
+\noindent
+The relaxation of the program (\ref{eq:mingap:ilp}) can be interpreted as a setting where a job does not have
+to be assigned to single machine; instead parts of the job can be assigned to various machines. If we try to solve
+the instance from the above example we may start feeling optimistic, since the optimum relaxed solution 
+is integral. Our optimism is, of course, in vain, since it suffices to set $T=7$ instead of $T=10$, and the 
+optimum assignment  $J_1\mapsto M_1$, $J_2\mapsto M_3$, $J_3\mapsto M_4$ a $J_4\mapsto M_2$ has cost $21$,
+while there is a solution of the relaxed program
+
+\begin{align*}
+  x_{11} &=\frac{3}{7} &
+  x_{22} &=\frac{49}{72} &
+  x_{24} &=\frac{1}{8} & 
+  x_{32} &=\frac{23}{72} &
+  x_{34} &=0 &
+  x_{41} &=\frac{4}{7} &
+  x_{42} &=0 &
+  x_{43} &=1 &
+  x_{54} &=\frac{7}{8}
+\end{align*}
+
+\noindent
+\begin{minipage}[t]{0.5\textwidth}
+  \vskip 0pt
+\noindent
+with cost  $\frac{7019}{504}\approx 13.9$. 
+We immediately see where the problem is: e.g. $M_5$ is an cost-efficient but slow machine. In the integral 
+solution we cannot use it, but the relaxed solution may put a part of $J_4$ there, that exactly fills the time
+limit. In spite of this we still see that some of the values in the optimum solution of the relaxed program are 
+integral, and we are going to base our strategy on that. We want to fix some integral values, and solve the rest
+by some similar linear program. We are thus interested if there can be an instance with no integral values in 
+the optimum relaxed solution; such instance would cause problems. The picture on the right shows that it 
+may indeed be the case, so as it seems we are stuck. Back to the drawing board. However, we 
+\end{minipage}\begin{minipage}[t]{0.5\textwidth}
+  \begin{myfiglabel}{0.7\textwidth}{svg/assignment2}{fig:mingap:ex}
+    An optimal assignment for the deadline $T=10$ is $M_2$ with cost 9.
+    Optimum solution of the relaxed program is $x_{11}=x_{21}=x_{31}=\frac{1}{3}$
+    with cost 5.
+  \end{myfiglabel}
+\end{minipage}
+\noindent
+still save the idea
+by observing 
+that instances where the optimum solution of the relaxed problem has no integral values must have a very
+special form that can be used to shrink the program in another way even if no variable is fixed in the given
+iteration. We would soon realize that instead of the original relaxed program we need to solve a slightly more
+general one. We save the reader the detour and directly present the generalized program. Instead of 
+forcing all machines to finish before the deadline, we maintain a subset $M'\subseteq M$ that must
+finish on time; the other ones may work without restrictions. Moreover, every machine $i\in M'$ may have
+a potentially different deadline. The resulting program is as follows:
+
+\begin{equation}
+\label{eq:mingap:lp}
+\begin{array}{rrcll}
+  {\rm minimize}     & \multicolumn{1}{l}{ \sum\limits_{(i,j)\in E}x_{ij}c_{ij}}\\[4mm]
+  {\rm subject\ to} & \sum\limits_{i\in M} x_{ij}& = &1 & \;\;\; \forall j\in J\\[4mm]
+                          & \sum\limits_{j\in J} t_{ij}x_{ij}&\le & T_i & \;\;\; \forall i\in M'\\[4mm]
+                        %  & \multicolumn{3}{c}{ x_{ij}\in\{0,1\}} & \;\;\; \forall i\in M, \; \forall j\in J
+                          & x_{ij} & \ge & 0 & \;\;\; \forall i\in M, \; \forall j\in J
+\end{array}
+\end{equation}
+
+\vskip 1ex
+\noindent
+The relaxation of (\ref{eq:mingap:ilp}) is a special case of (\ref{eq:mingap:lp}) for $M'=M$ and $T_i=T$.
+In the following we denote by $deg(k)$ for $k\in J\cup M$ the degree of the job or machine in the graph $G$
+(i.e. the number of incident edges). The key to the whole algorithm is the following characterization of the 
+optimal solutions:
+
+\begin{lema}
+  \label{lm:mingap:char}
+  Let \bm{x} be a basic solution of (\ref{eq:mingap:lp}), where for all  $i$, $j$ is 
+  $0<x_{ij}<1$. Then there is a machine  $i\in M'$ for which either  $deg(i)\le 1$, or
+  $deg(i)=2$ and  $\sum_{j\in J}x_{ij}\ge1$.
+\end{lema}
+
+\noindent
+Lemma~\ref{lm:mingap:char} tells us that if, after solving the program  (\ref{eq:mingap:lp}) we are in 
+a situation where there is no integral variable in the solution, we have a machine that either can process
+only one job, or can process two jobs, and it is assigned a part of each (moreover, these parts sum up to
+$\ge1$). In order to prove Lemma~\ref{lm:mingap:char} we use the following claim:
+
+\begin{lema}
+  \label{lm:mingap:tmp1}
+  Let \bm{x}  be a basic solution of (\ref{eq:mingap:lp}) where all $x_{ij}>0$. 
+  Then there is a set  $M''\subseteq M'$ of  $|M''|=|E|-|J|$ machines such that all machines
+  $i\in M''$ are working all their available time, i.e.  $\sum\limits_{j\in J}t_{ij}x_{ij}=T_i$.
+\end{lema}
+
+
+\begin{dokaz}
+  Recall the definition of the basic solution (Definition~\ref{dfn:LP:basis}). First, we required the 
+  program to be in a normal form $\max\limits_{\bm{x}}\{\bm{c}\tr\bm{x}\mid A\bm{x}=\bm{b},\;\bm{x}\ge0\}$
+  where $A$ has full rank (i.e. the rows are independent). So let us transform the program (\ref{eq:mingap:lp}) 
+  into the required normal form by changing minimization to maximization, and by introducing a slackness variable
+  $s_i$ for each constraint  $\sum_{j\in J}t_{ij}x_{ij}\le T_i$ transforming it into a constraint
+   \hbox{$\sum_{j\in J}t_{ij}x_{ij}+s_i= T_i$.} This way we obtain a matrix of constraints of dimensions
+  $(n+m')\times (|E|+m')$ in the form
+$$A=\left(\begin{array}{c|c}B&0\\\hline C&I\end{array}\right),$$
+  where  $B\in\R^{n\times |E|}$ is the matrix of job constraints,
+  $C\in\R^{m'\times|E|}$ is the matrix of machine constraints, and $I$ is the identity matrix
+  $m'\times m'$ involving the slackness variables $s_i$.
+  The reader easily verifies that the rows of $A$ are linearly independent.
+
+  \centerline{\begin{minipage}[t]{0.9\textwidth}\vskip 0pt
+      \mycaption{For example the instance  (\ref{fig:mingap:ex}) yields a program
+        $$\max_{\bm{x}\in\R^6}\{\bm{c}\tr\bm{x}\mid A\bm{x}=\bm{b},\;\bm{x}\ge0\} $$
+        where
+        \begin{align*}
+          \bm{c}&=\cvect{-3\\-9\\-3\\0\\0\\0}&
+          \bm{x}&=\cvect{x_{11}\\x_{21}\\x_{31}\\s_1\\s_2\\s_3}&
+        A&=\left(\begin{array}{ccc|ccc}1&1&1&0&0&0\\\hline30&0 &0 &1&0&0\\0&10&0 &0 &1&0\\0&0&30&0&0&1 \end{array}\right)&
+          \bm{b}&=\cvect{1\\T\\T\\T}
+        \end{align*}
+      }
+  \end{minipage}}
+
+  \noindent
+  Following Definition~\ref{dfn:LP:basis}, the basis has size $n+m'$, and all non-basic entries are zeroes. 
+  Since we suppose all $x_{ij}>0$, any basic solution must have $|E|+m'-(n+m')=|E|-n$ zero variables  $s_i$.
+  Each zero slackness variable $s_i$ provides one machine for which $\sum_{j\in J}t_{ij}x_{ij}+s_i= T_i$.
+\end{dokaz}
+
+
+\begin{dokazpar}{of Lemma~\ref{lm:mingap:char}}
+  Consider a basic solution of (\ref{eq:mingap:lp}), where $0<x_{ij}<1$ for each $i,j$, and moreover
+   $deg(i)\ge2$ for all $i\in M'$. Each job $j\in J$ must have   $deg(j)\ge2$: since  $\sum_{i\in M}x_{ij}=1$,
+   having  $deg(j)=1$ would imply some $x_{ij}=1$. For the set $M''$ from Lemma~\ref{lm:mingap:tmp1} we have
+  $$|J|+|M''|=|E|=\frac{\sum\limits_{j\in J}deg(j) + \sum\limits_{i\in M}deg(i)}{2}
+  \ge\frac{\sum\limits_{j\in J}deg(j) + \sum\limits_{i\in M'}deg(i)}{2}
+  \stackrel{(\clubsuit)}{\ge}|J|+|M'|\ge |J| + |M''|
+  $$
+
+  \noindent
+  The inequality $(\clubsuit)$ holds because for  $i\in M'$ the  $deg(i)\ge 2$ holds by assumption, and
+  $deg(j)\ge 2$ we have just shown for all $j\in J$. Since the first and the last expressions in a sequence
+  of inequalities are equal, there must be equality everywhere. As $M''\subseteq M'$, we have $M'=M''$.
+  Moreover, since all vertices from $J$ and $M'$ have degree at least 2, 
+  the only possibility to keep the equality in $(\clubsuit)$ is when
+  it holds  $deg(j)=2$  for all $j\in J$ and $deg(i)=2$ for all $i\in M'$. To reach equality also in 
+  the previous inequality, it must be  $deg(i)=0$ for all $i\in M\setminus M'$.
+
+  \noindent
+  But then it must be that $G$ is composed of isolated vertices, and vertices of degree two only, i.e. forms
+  a set of disjoint cycles. Since $G$ is bipartite, every cycle $C$ has even length, and so it contains an equal
+  number $k$  machines and $k$ jobs. Since for each job $j$ it holds $\sum_{i\in M'}x_{ij}=1$, it is
+   $\sum_{(i,j)\in C}x_{ij}=k$ and so there must be a machine $i$ in $C$, such that  $\sum_{j\in J}x_{ij}\ge1$.
+\end{dokazpar}
+
+\noindent
+Given the characterization of the basic solutions from Lemma~\ref{lm:mingap:char}, the outline of an algorithm 
+starts to materialize. If in a solution of the program (\ref{eq:mingap:lp})  there is some variable $x_{ij}=1$
+we assign the job $j$ to the machine $i$; we are done with the job $j$, and the deadline $T_i$ of the machine $i$
+is decreased accordingly (this is the reason why we wanted to have different deadlines for different machines in 
+the program  (\ref{eq:mingap:lp}). If, on the other hand, there is some variable $x_{ij}=0$, we remove the edge
+from the graph, obtaining a smaller graph (and, in turn, smaller LP for the next iteration). Further, it there is
+some machine $i\in M'$ that can process only one job ($deg(i)=1$) we can disregard its deadline: we can suppose
+without loss of generality that for each edge, the associated time fits the deadline of the machine (otherwise 
+the edge can never be used, and can be discarded), which means that no matter whether the final solution will
+assign something to machine $i$ or not, $i$'s deadline will not be exceeded. Finally, the last possible situation
+that may occur after solving the program (\ref{eq:mingap:lp}) is when there is some $i\in M'$ with degree 2
+and $\sum_{j\in J}x_{ij}\ge1$. In this case we can also disregard the deadline: $deg(i)=2$, so in any 
+feasible solution it holds  $\sum_{j\in J}x_{ij}\le2$. Since in our solution $\sum_{j\in J}x_{ij}\ge1$, and the
+deadline is still met, no matter what happens in the final solution, the deadline may be overstretched at most
+by a factor of 2. In both  cases we obtain a new program that smaller in the sense that the size of $M'$ has
+decreased. The described algorithm for the \mingap problem looks as follows:
+
+
+\vskip 2mm
+\hrule
+\begin{itemize}
+  \item[1] $M':=M$, $\forall i:\;T_i:=T$, $F:=\emptyset$ 
+    ($F$ is the set of assigned edges)
+  \item[2] while $J\not=\emptyset$
+    \begin{itemize}
+      \item[3\phantom{a}] nech \bm{x} is optimum solution of program (\ref{eq:mingap:lp}),\\
+        perform one of the cases
+      \item[4a] if there exists $x_{ij}=0$,\\ remove edge $(i,j)$ from $G$
+      \item[4b] if there exists  $x_{ij}=1$,\\
+        $F:=F\cup\{(i,j)\}$, $J:=J\setminus\{j\}$, $T_i:=T_i-t_{ij}$
+        \item[4c] else let $i\in M'$ such that $deg(i)\le1$ or $deg(i)=2$ and $\sum_{j\in J}x_{ij}\ge1$\\
+        $M':=M'\setminus\{i\}$
+    \end{itemize}
+\end{itemize}
+\hrule
+\vskip 3ex
+
+\noindent
+Every iteration of the cycle on line 2 decreased the value of $|E|+|J|+|M'|$, so the algorithm terminates after
+a polynomial number of iterations. It is easy to see that in the end, every job is assigned to some machine. 
+What remained to be shown is that the performance of the algorithm is a we hoped:
+
+
+\begin{veta}
+  The presented algorithm solves \mingap in polynomial time. The found solution has optimal cost, 
+  and each machine finished its work no later than in time $2T$.
+\end{veta}
+
+\begin{dokaz}
+  We already shown that the algorithm works in polynomial time, and produces a feasible solution.
+  Now we shall show that this solution is indeed optimal. Let $c$ be the cost of the optimum
+  solution of the program (\ref{eq:mingap:lp}) for $M'=M$ and  all $T_i=T$. Clearly, $c\le OPT$.   
+  We show by induction that in each iteration of the main loop, the cost of the already assigned jobs $F$ together
+  with the cost of the current solution of  (\ref{eq:mingap:lp}) from line 3, is at most $c$.
+  For the induction basis note that in the first iteration the statement holds trivially. Now consider
+  an arbitrary iteration. If the case 4a is executed, neither $F$ nor the optimum of the program  (\ref{eq:mingap:lp})
+  is changed. In the case 4b, the cost of $F$ is increased by $c_{ij}$, and the cost of the optimum
+  solution of (\ref{eq:mingap:lp}) is decreased at least by $c_{ij}x_{ij}=c_{ij}$. In the case 4c, the
+  cost of $F$ is not affected, and the cost of the optimum of (\ref{eq:mingap:lp}) is not increased.
+
+  \noindent
+  Finally, let us show that the overall time spent by any machine is at most $2T$. 
+  Denote  by $F_{i,\ell}$ the time induced on machine $i$ by the jobs assigned to $F$ during the
+  first $\ell-1$ iterations, and similarly by $T_{i,\ell}$ the value of  $T_i$ at the beginning of the
+  $\ell$-th iteration. Fix some machine $i$. During the first iterations, while $i\in M'$
+  it holds $T_{i,\ell}+F_{i,\ell}\le T$ (if a job is assigned to $i$, its deadline is updated correspondingly on
+  line 4b). Hence, consider the iteration $\ell$ in which $i$ is removed from $M'$ on line 4c. There are two ways 
+  this may happen:
+
+  \noindent
+  {\bfseries 1. $deg(i)\le1$}. Let $j$ be the only job connected\footnote{To be precise we should
+    index also the graph $G$ by the number of iteration $\ell$, since $G$ evolves during the computation.
+    To make the notation less cumbersome, we rely on the reader to understand from the context which graph $G$
+  is referred to.} in the iteration $\ell$ to the machine $i$. How much time may $i$ spend in the final solution?
+  Surely the time it has already allocated, i.e.  $T_{i,\ell}$, plus maybe $t_{ij}$ (it the job $j$ happens to
+  be assigned to $i$ in the end), but surely not more, since no other job is connected to $i$. Hence, the
+  overall time is at most  $F_{i,\ell}+t_{ij}\le T_{i,\ell}+F_{i,\ell}+t_{ij}\le 2T$;
+  the last inequality is due to the fact that for all edges it holds  $t_{ij}\le T$, and up to the $\ell$-th
+  iteration the machine $i$ was in $M'$ so $T_{i,\ell}+F_{i,\ell}\le T$.
+    
+  \noindent
+  {\bfseries 2. $deg(i)=2$ a $\sum_{j\in J}x_{ij}\ge1$} Let $j_1$, $j_2$ 
+  be the only two jobs connected with $i$. Again, we ask how much time may $i$ need in the final solution.
+  Clearly at most $F_{i,\ell}+t_{ij_1}+t_{ij_2}$. At the beginning of the $\ell$-th iteration we had
+  $F_{i,\ell}+T_{i,\ell}\le T$. When solving  (\ref{eq:mingap:lp}) in the $\ell$-th iteration, $T_{i,\ell}$
+  is the limit for machine $i$, so if \bm{x} is the solution from line 3, it holds
+  $t_{ij_1}x_{ij_1}+t_{ij_2}x_{ij_2}\le T_{i,\ell}$. Hence, it holds also 
+  $F_{i,\ell}\le T-t_{ij_1}x_{ij_1}+t_{ij_2}x_{ij_2}$, implying that $i$ never uses more time than
+  
+  \begin{eqnarray*}
+    T-t_{ij_1}x_{ij_1}+t_{ij_2}x_{ij_2}+t_{ij_1}+t_{ij_2} &\le \\
+    T + (1-x_{ij_1})t_{ij_1} + (1-x_{ij_2})t_{ij_2} &\le \\
+    T + (1-x_{ij_1})T + (1-x_{ij_2})T &\le \\
+    T (3-x_{ij_1}-x_{ij_2})&\le& 2T
+  \end{eqnarray*}
+  
+  \noindent
+  where the last inequality follows from the assumption that
+  $\sum_{j\in J}x_{ij}\ge1$.
+
+\end{dokaz}

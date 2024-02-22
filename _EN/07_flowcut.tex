@@ -1,0 +1,166 @@
+\newpage
+\section{\maxflow--\mincut in the view of LP duality}
+
+\noindent 
+The LP duality, introduced in the previous section, often helps to better (or at least differently)
+understand min-max characterizations of computational problems. In this part we employ the duality 
+theory to give an alternative proof of the known fact that the size of the maximum $s-t$ flow equals to 
+the capacity of the minimum $s-t$ cut. Since we suppose that the reader is already familiar with the 
+\maxflow and \mincut problems, we abstain from motivational examples, and just recall the definitions.
+
+\noindent
+Given is an (undirected) graph $G=(V,E)$ with non-negative edge weights, i.e.
+a mapping $c:E\mapsto\R^+$; instead of  $c(\{u,v\})$ we shall use a shorthand notation
+$c_{uv}=c_{vu}$. In the graph, there are two distinguished vertices $a$ and $t$,
+The \maxflow problem aims to maximize the flow from $s$ to $t$, where a flow is a mapping
+$f:V^2\mapsto\R^+$, such that $f(u,v)$ represents the amount of a liquid that flows
+from $u$ to $v$ in an unit time. The flow must hence satisfy the following properties:
+\begin{enumerate}
+  \item if $f(u,v)\not=0$ then  $(u,v)\in E$, i.e. the flow can be only along the edges of the graph
+  \item $f(u,v)=-f(v,u)$, i.e. the sign gives the direction of the flow
+  \item for each $v\not\in\{s,t\}$ it holds $\sum\limits_{u\in V}f(u,v)=0$, 
+  known as a flow conservation law
+  \item $|f(u,v)|\le c_{uv}$, i.e. the flow is bounded by the capacity of the edge
+\end{enumerate}
+\noindent
+The size of the flow is  $\sum_{v\in V}f(s,v)$. 
+A cut in $G$ is a set of edges in $G$ whose removal disconnects $s$, and $t$ (i.e. they are in different
+connected components of the resulting graph). The \mincut problems asks to find a cut with minimal capacity.
+The following figure depicts a graph with a minimum cut (left), and a maximum flow (right; the dark edges 
+are those whose capacity is fully used by the flow) with value 24.
+
+
+\begin{myfig}{\textwidth}{svg/flowcutNew}
+\end{myfig}
+
+
+\noindent
+The \maxflow problem has a number of  natural formulations as a linear program. For reasons we hope
+to become apparent by the end of this section we choose the following one: for each edge $(u,v)\in E$ 
+we introduce two non-negative variables $x_{uv}$ and $x_{vu}$ that denote the amount of flow
+along the edge $(u,v)$ (note that, by doing this, we allow to have a non-negative amount of flow $x_{uv}$ from
+$u$ to $v$, and at the same time, some non-negative amount of flow $x_{vu}$ from $v$ to $u$; however,
+it is easy to verify that simply subtracting the two values maintains the feasibility and value of a solution,
+and makes it compatible with our definition of flow).  Next, we introduce a variable $f$ that will
+denote the amount of the whole flow (and the goal will be to maximize $f$):
+$f=\sum\limits_{u:(s,u)\in E}x_{su}-\sum\limits_{u:(s,u)\in E}x_{us}$. 
+Flow conservation law, and the capacity constraints can easily be expressed as linear inequalities, yielding
+the following program:
+
+\begin{equation}
+  \label{eq:flow:1}
+  \begin{array}{rrcll}
+      {\rm maximize}     & \multicolumn{1}{r}{f}\\[8mm]
+    {\rm subject\ to} & \sum\limits_{u:(s,u)\in E} x_{su} - \sum\limits_{u:(s,u)\in E} x_{us} - f  &=&0&  \\[6mm]
+                            & \sum\limits_{u:(t,u)\in E} x_{ut} - \sum\limits_{u:(s,u)\in E} x_{tu} + f  &=&0&  \\[6mm]
+                            & \sum\limits_{u:(u,v)\in E} x_{vu} - \sum\limits_{u:(u,v)\in E} x_{uv} &=&0&\;\;\;
+    \forall v\in V - \{s,t\}\\[6mm]
+    & x_{uv}&\le& c_{uv}&  \;\;\;\forall (u,v)\in E\\[1mm]
+    & x_{vu}&\le& c_{uv}&  \;\;\;\forall (u,v)\in E\\[1mm]
+                            & x_{uv}&\ge& 0 &  \;\;\;\forall (u,v)\in E\\
+  \end{array}
+\end{equation}  
+
+\noindent
+The first two constraints define the size of the flow $f$ as the net amount that leaves $s$, or enters $t$,
+respectively. All remaining vertices (the next set of constraints) obey the flow conservation law. 
+
+\noindent
+Now let us apply our dualization recipe, and look at the dual minimization program to the program (\ref{eq:flow:1})
+Every constraint in the primal program gives rise to a variable in the dual program, In the program  (\ref{eq:flow:1})
+there are two types of constraints: the constraints of the form $\cdots = 0$ for each vertex, and
+constraints  $x_{uv}\le c_{uv}$. Introduce a dual variable  $y_v\in\R$ for each vertex $v\in V$
+($y_s$ corresponds to the first constraint, $y_t$ to the second one, and the rest to the remaining vertices),
+and a pair of non-negative variables $z_{uv}$ a $z_{vu}$ for each edge $(u,e)\in E$. The $i$-th dual variable
+is a multiplier of the $i$-th constraint in the linear combination with the requirement that sum of the left-hand
+sides is component-wise bigger than the maximized utility function. The sum of the right-hand sides is in 
+our case $\sum\limits_{(u,v)\in E}(z_{uv}+z_{vu})c_{uv}$.
+The maximized function is zero in all components but $f$. The variable $f$ appears only in the first and 
+second constraints of  (\ref{eq:flow:1}), hence we get in the dual a constraint $y_t-y_s=1$
+(note that although in the optimum solution $f$ clearly is non-negative, we did not require the variable $f\ge0$).
+Every variable $x_{uv}$ appears in three constraints: the constrain corresponding to vertex the $u$ with positive sign,
+the constraint corresponding to the vertex $v$ with negative sign, and in the constraint $x_{uv}\le c_{uv}$. 
+Summarizing, we get the following program:
+
+\begin{equation}
+  \label{eq:flow:2}
+  \begin{array}{rrcll}
+    {\rm minimize}     & \multicolumn{1}{r}{\sum\limits_{(u,v)\in E}(z_{uv}+z_{vu})\,c_{uv}}\\[8mm]
+    {\rm subject\ to} & y_t - y_s  &=&1&  \\[3mm]
+                            & y_v - y_u + z_{uv} &\ge&0&\;\;\;    \forall (u,v)\in E \\[3mm]
+                            & y_u - y_v + z_{vu} &\ge&0&\;\;\;    \forall (u,v)\in E \\[3mm]
+                            & z_{uv},z_{vu}&\ge& 0 &  \;\;\;\forall (u,v)\in E\\
+  \end{array}
+\end{equation}  
+
+\noindent
+From the strong duality theorem we know that programs (\ref{eq:flow:1}) and (\ref{eq:flow:2})
+have the same value of the optimum. How can we interpret the  program  (\ref{eq:flow:2})?
+Without loss of generality we can suppose that at least one of the pair of variables  $z_{uv},z_{vu}$
+is zero: the only constraints concerning  $z_{uv}$ or $z_{vu}$ are the constraints
+$z_{uv}\ge y_u-y_v$ and $z_{vu}\ge y_v-y_u$. Clearly, at least one of the values 
+ $y_u-y_v$ and  $y_v-y_u$ is not positive, and so we can set at least one of them to zero in any feasible solution,
+and not increase the value of the utility function. Hence, we can denote $\bar{z}_{uv}=\max\{z_{uv},z_{vu}\}$;
+the constraints then ensure that $\bar{z}_{uv}\ge|y_u-y_v|$ and using the same arguments as before we can
+suppose without loss of generality  $\bar{z}_{uv}=|y_u-y_v|$.
+Now we can see the  solving of the program as placing the vertices of the graph on a line: the vertex $v$
+is placed in the point $y_v$, where again without loss of generality we may assume that $s$ is placed in $0$, and
+$t$ in $1$. The value  $\bar{z}_{uv}$ is the length of the edge $(u,v)$ in this placement of vertices.
+Altogether, the optimal solution of the program  (\ref{eq:flow:2}) places the vertices of the graph on a line
+segment of length 1 in such a way that $s$ and $t$ are on the endpoints, and the overall length 
+of edges, weighted by their capacity, is minimized.
+
+\begin{myfig}{0.9\textwidth}{svg/relaxcut}
+  A graph with edge weights (left) and one of possible optimal solutions (right) of the program
+  (\ref{eq:flow:2}):
+  $\bar{z}_{su}=\bar{z}_{vw}=\frac{1}{6}$, $\bar{z}_{sv}=\bar{z}_{uw}=\frac{1}{3}$,
+  $\bar{z}_{sw}=\bar{z}_{wt}=\frac{1}{2}$. The resulting value is
+  $$\sum_{(u,v)\in E}c_{uv}\bar{z}_{uv}=\frac{1}{6}+\frac{1}{3}+2\frac{1}{2}+\frac{1}{3}+\frac{1}{6}+4\frac{1}{2}=4.$$
+\end{myfig}
+
+\noindent
+Now let us rewrite the program  (\ref{eq:flow:2}) in normal form 
+$\max\{-\bm{c}\tr\bm{\beta}\mid A\bm{\beta}=0,\;\bm{\beta}\ge0\}$.
+Introduce a slackness variable $\hat{z}_{uv}\ge 0$ to each variable  $z_{uv}$, obtaining the
+constraints of the form  \hbox{$y_v-y_u+z_{uv}-\hat{z}_{uv}=0$}.
+If the vector  $\bm{\beta}$ contains the values ordered as  
+$y_s,y_t,y_{v_1},\ldots,z_{uv},z_{vu},\ldots,\hat{z}_{uv}.\hat{z}_{vu},\ldots$, 
+the matrix $A$ has the following structure:
+
+\begin{myfig}{0.8\textwidth}{svg/cutlp}
+\end{myfig}
+
+\noindent
+The following straightforward chores are left to the reader:
+
+
+\begin{prob}
+  Using Theorems \ref{thm:idTum} and \ref{thm:unimod} prove that the matrix $A$ is TUM.
+\end{prob}
+
+
+\noindent
+Theorem~\ref{thm:tumInteger} implies that there exists an integral optimal solution of the 
+program (\ref{eq:flow:2}). It means that all vertices have $y_v\in\{0,1\}$, i.e. they are placed in one of 
+the endpoints of the line, and each edge has length 0 or 1. That means that every $s-t$ path must contain at least
+one edge with length 1, which implies that the removal of edges with length 1 disconnects $s$ and $t$.
+So we can say
+
+\begin{veta}[\maxflow-\mincut theorem]
+  The size of the maximal flow is equal to the capacity of the minimal cut.
+\end{veta}
+\begin{dokaz}
+  The size of the maximal flow is the optimum value of the program (\ref{eq:flow:1}), which is the same
+  as the optimum of the program  (\ref{eq:flow:2}). There exists an integral optimum of (\ref{eq:flow:2})
+  and at the same time there is a bijection between $s-t$ cuts and integral solutions of  (\ref{eq:flow:2}).
+\end{dokaz}
+
+\noindent
+It is quite possible that the reader is familiar with a proof that is significantly simpler, and does not involve
+the linear programming. The reason why we present this argument (apart from the fact that we want to 
+give a more concrete  example of the LP duality) is that the \maxflow-\mincut pair is seen as a special case
+of a general class of problems; at the same time, it sheds a new light into the question why a similar result 
+does not hold for seemingly similar problems (e.g. we would have more sources and sinks, and the goal would be
+to maximize the flow of several commodities in common networks of pipes, we would get a problem that is dual to the
+relaxed version of the \minmulticut from Definition~\ref{dfn:multicut}, however, a similar result does not hold)
+via the unimodularity of the corresponding matrices.

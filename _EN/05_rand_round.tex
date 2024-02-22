@@ -1,0 +1,294 @@
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Randomized rounding}
+
+In this section we shall continue with the same general approach as before: if we want to solve an optimization 
+problem
+(a discrete one), we formulate it as an ILP, solve the relaxed LP version, and  think of some way how to use
+the optimum solution of the relaxed program to obtain some approximation of the original problem.
+Oftentimes in our ILP formulation we use indicator variables, i.e. variables of the form $x_i\in\{0,1\}$,
+that are transformed in the relaxed problem into the form $0\le x_i\le1$. If the indicator variable is interpreted
+as a flag whether, say, a given item is selected, then it is natural to interpret the relaxed variable as a 
+probability of selecting the item. In the following we shall build on this intuition, and show how to use in 
+in the design of approximation algorithms. The general approach is to first construct a randomized rounding 
+algorithm that returns a good approximation in expectation, and then we show how to transform it into
+deterministic algorithm with the same approximation guarantees (this process is called {\em derandomization}).
+As usual, let us start with a concrete example:
+
+
+\subsection*{\maxsat}
+
+\noindent
+When we were speaking about integer linear programs, we mentioned the \NP-complete problem \sat 
+(see Definition~\ref{dfn:sat}). Now we shall consider its optimization version:
+\begin{framed}
+\begin{dfn}
+  \label{dfn:maxsat}
+  Given $n$ boolean variables $x_1,\ldots,x_n\in\{true,false\}$, we call {\em literal}
+  either a variable $x_i$ or its negation $\neg{x_i}$. A {\em clause} is a disjunction
+  of literals $C=l_1\vee l_2\vee\cdots\vee l_{k_C}$, a {\em formula in conjunctive normal form (CNF)}
+  is a conjunction of $m$ clauses  $F=C_1\wedge C_2\wedge\cdots\wedge C_m$.
+
+  \noindent
+  The problem \maxsat is a maximization problem where the input is a formula $F$ (in CNF), in which
+  each clause $C_i$ has a non-negative weight $\omega_i$. The goal of the problem is to find a truth assignment
+  for the variables $x_1,\ldots,x_n$ such that the overall weight of satisfied clauses is maximized.
+\end{dfn}
+\end{framed}
+
+
+\noindent
+If all clauses have unit weights, then the formula is satisfiable if and only if the optimum is $m$;
+so an optimal algorithm for \maxsat can be used to solve \sat. In the sequel let us denote the 
+overall weight of all clauses $Z$, i.e. $$Z=\sum_{i=1}^m\omega_i.$$
+It is easy to see that in any case, an overall weight $Z/2$ can be easily obtained: first, let us set all 
+variables to $0$. If the weight is at least $Z/2$, we are done. Otherwise, set all variables to $1$.
+Any clause that was not satisfied in the original solution is surely satisfied now, so we have guaranteed
+a solution with weight at least $Z/2$.
+
+However, it is not so trivial to achieve a better guarantee. We show now how to obtain a solution with
+$3/4$ of the overall weight.
+
+\noindent
+Let us begin with an extremely simple randomized algorithm \alg{A1} that does not use any linear programming,
+but just sets every variable to be $0$ or $1$ independently at random with probability $1/2$. What is 
+the expected overall weight of satisfied clauses? Let us denote this weight $W$; $W$ is a random variable,
+and we are interested in its expected value
+$\ev{W}$.
+Let $X_i$ be an indicator random variable such that $X_i=1$ if and only if $C_i$ is satisfied.
+We have
+$$W=\sum_{i=1}^m\omega_iX_i$$
+and so from the linearity of expectation
+$$\ev{W}=\ev{\sum_{i=1}^m\omega_iX_i}=\sum_{i=1}^m\omega_i\ev{X_i}
+=\sum_{i=1}^m\omega_i\pr{X_i=1}.$$
+
+\noindent
+For a clause $C_i$, let us denote by $s(C_i)$ its size, i.e. the number of literals it contains. 
+What is the probability that a particular clause $C_i$ is satisfied? A clause is satisfied exactly if at least
+one of its literals is. Since each variable $x_i$ is set independently at random with probability $1/2$,
+the probability that $C_i$ is {\em not} satisfied is $2^{-s(C_i)}$, so 
+$\pr{X_i=1}=1-2^{-s(C_i)}$. Now if we suppose that every clause has at least $k$ literals for some $k$, 
+then the algorithm \alg{A1} is expected to gain a weight at least 
+\begin{equation}
+\label{eq:maxsat:A1}
+\ev{W}=\sum_{i=1}^m\omega_i\pr{X_i=1}=\sum_{i=1}^m\omega_i\left(1-2^{-s(C_i)}\right)\ge(1-2^{-k})Z.
+\end{equation}
+In the general case if the formula can contain clauses with just 1 literal the approach did not help much
+-- we still have only a guarantee $Z/2$. For bigger values of $k$, however, we are better off.
+
+\subsubsection*{Derandomization}
+
+\noindent
+We have just developed a randomized algorithm that satisfies clauses with expected weight $(1-2^{-k})Z$
+if every clause has at least $k$ literals. Now the question is if we can develop a deterministic algorithm 
+with the same guarantee, i.e. such that always satisfies clauses with weight at least  $(1-2^{-k})Z$.
+The algorithm \alg{A1} uses $n$ random bits. During the derandomization process we shall 
+successively modify \alg{A1} such that we fix the first $i$ (for $i=1,2,\ldots$)
+of the random bits to some values, and let the remaining ones be random, yielding a randomized algorithm
+using $n-i$ random bits. If we can design the transformation that fixes one additional random bit so that
+the expected outcome does not decrease, in the end we obtain a deterministic algorithm with that performs 
+as good as the is expected outcome of the randomized one.
+
+\noindent
+How to fix the first bit? If we fix, e.g.
+$x_1=1$, the expected outcome is
+$$\ev{W\mid x_1=1}=\sum_{i=1}^m\omega_i\pr{X_i=1\mid x_1=1}.$$
+Consider the $i$-th clause. What is the probability that $C_i$ is satisfied if $x_1=1$? If $C_i$
+contains the literal $x_i$ the probability is 1, if it contains the literal  $\overline{x_i}$ the
+the probability is $1-2^{1-s(C_i)}$, and otherwise it is $1-2^{-s(C_i)}$.
+The value $\ev{W\mid x_1=0}$ can be computed analogously. Since in the original algorithm the 
+probability that $x_1=1$ was $1/2$, we get 
+$$\ev{W} = \frac{1}{2}\ev{W\mid x_1=0} + \frac{1}{2}\ev{W\mid x_1=1},$$
+and hence at least one of the values  $\ev{W\mid x_1=0}$, $\ev{W\mid x_1=1}$ is at least as big
+as $\ev{W}$. Thus we have an algorithm using $n-1$ random bits with expected outcome at least $\ev{W}$.
+
+\noindent
+The derandomized algorithm \alg{A1det} works in $n$ iterations, and in the $t$-th iteration
+it maintains a tuple of constants $c_1,\ldots,c_{t-1}$. For each clauses $C_i$ it computes 
+$\pr{X_i=1\mid x_1=c_1,\ldots,x_{t-1}=c_{t-1},x_t=0}$  and $\pr{X_i=1\mid x_1=c_1,\ldots,x_{t-1}=c_{t-1},x_t=1}$.
+Based on this it computes the expected values
+$\ev{W\mid x_1=c_1,\ldots,x_{t-1}=c_{t-1},x_t=0}$ and
+$\ev{W\mid x_1=c_1,\ldots,x_{t-1}=c_{t-1},x_t=1}$,
+and sets $c_t$ according to which of them is bigger. After $n$ iterations the values $c_1,\ldots,c_n$
+are returned as the solution.
+
+\noindent
+The same derandomization 
+approach (called {\em the method of conditional probabilities}) can be used in all cases where
+there is a deterministic algorithm to compute the expected outcome of the original randomized 
+algorithm with any number of fixed first $i$ random bits:
+
+
+\begin{veta}
+\label{thm:derandom}
+Consider a randomize algorithm \alg{A_R} solving in polynomial time some optimization problem ${\cal P}$
+such that on an input \bm{x} it performs $R(\bm{x})$ random decisions $r_1,r_2,\ldots,r_{R(\bm{x})}$;
+the decisions are independent Bernoulli (binary) random variables with  $\pr{r_i=1}=p_i$.  
+Let us suppose that there exists a polynomial-time algorithm computing, for any $i$ and a tuple of constants
+ $c_1,\ldots,c_i\in\{0,1\}$, the expected value  $\ev{\alg{A_R}(\bm{x})\mid b_1=c_1,\ldots,b_i=c_i}$.
+Then there exists a deterministic polynomial-time algorithm that computes a solution of ${\cal P}$
+at least as good as $\ev{\alg{A_R}(\bm{x})}$.
+\end{veta}
+
+\noindent
+In this general case a single iteration of the derandomized algorithm uses the fact that
+\begin{align*}
+\ev{W\mid r_1=c_1,\ldots,r_{i-1}=c_{i-1}}=&
+p_i\ev{W\mid r_1=c_1,\ldots,r_{i-1}=c_{i-1},r_i=1} +\\
+&(1-p_i)\ev{W\mid r_1=c_1,\ldots,r_{i-1}=c_{i-1},r_i=0},
+\end{align*}
+yielding that no matter what the $p_i$ is, at least one of the expected values for
+$r_i=1$, $r_i=0$ is at least as big as the original expected value.
+
+\subsubsection*{Algorithm for short clauses}
+
+\noindent
+Now let us get back to the \maxsat problem. If every clause contained at least two literals, the algorithm 
+\alg{A1det} would already guarantee to achieve $3/4$ of the overall weight (ant thus of the optimal solution). 
+The problem is only with singleton clauses (containing only one literal). For a reader familiar with the
+decision problem \sat this may feel as some minor technical detail: if we have to decide whether the
+formula is satisfiable or not, singleton clauses play only in our favor, since they effectively fix a value
+of one variable. This is, however, not the case if we are not deciding satisfiability, but trying to find
+a maximizing truth assignment: the formula may contain, e.g. a clause $x_i$ with some weight, and a 
+clause $\overline{x_i}$ with some other weight, and it is not clear how to set the value of $x_i$.
+
+
+\noindent
+Here finally comes linear programming to play. First, let us express \maxsat as an ILP. In the most natural way,
+let us introduce a variable $p_i\in\{0,1\}$ for each variable $x_i$. The goal is to maximize the 
+weight of satisfied clauses, so we introduce another selector variable $z_i\in\{0,1\}$ for each clause 
+$C_i$ such that
+$z_i=1$ if $C_i$ is satisfied by the variables $x$. Now it is easy to write down the utility function
+$\sum_{i=1}^m\omega_iz_i$. What remains now is to design the linear constraints such that $z_i=1$ only if 
+$C_i$ is satisfied, i.e. if no literal of $C_i$ is true, then $z_i$ must be zero. Denote $C^+$ 
+the indices of the variables that appear in $C$ in positive literals, and $C^-$ the indices that appear
+in $C$ in negated literals. We get the following program:
+ 
+
+\begin{equation}
+\label{LP:maxsat:prog1}
+\begin{array}{rrcll}
+{\rm maximize}     & \multicolumn{1}{l}{ \sum\limits_{i=1}^m\omega_iz_i}\\[3ex]
+{\rm subject\ to} & \sum\limits_{j\in C_i^+}p_j + \sum\limits_{j\in C_i^-}(1-p_j) &\ge&z_i& \;\;\;
+                            \forall i=1,\ldots,m \\
+                        & z_i,p_i&\in&\Z
+\end{array}
+\end{equation}
+
+\noindent
+and its relaxed version
+
+\begin{equation}
+\label{LP:maxsat:prog2}
+\begin{array}{rrcll}
+{\rm maximize}     & \multicolumn{1}{l}{ \sum\limits_{i=1}^m\omega_iz_i}\\[3ex]
+{\rm subject\ to} & \sum\limits_{j\in C_i^+}p_j + \sum\limits_{j\in C_i^-}(1-p_j) &\ge&z_i& \;\;\;
+                            \forall i=1,\ldots,m \\
+                        & z_i,p_i&\ge&0\\
+                        & z_i,p_i&\le&1\\
+\end{array}
+\end{equation}
+
+\noindent
+Finally, we get to the point of this section -- randomized rounding. The randomized algorithm \alg{A2}
+solves the program (\ref{LP:maxsat:prog2}) obtaining some optimal values  $p_i^\star$, $z_i^\star$, and
+then set each variable $x_i$ to 1 independently at random with probability $p_i^\star$.
+What is the expected value of \alg{A2}? Similarly as with algorithm \alg{A1} denote by $W$ the
+overall weight gained by the algorithm, and let $X_i$ be an indicator whether the $i$-th clause is satisfied,
+and let us estimate 
+$$\ev{W}
+=\sum_{i=1}^m\omega_i\pr{X_i=1}.$$
+A clause $C_i$ is not satisfied if no literal is true. A positive literal  $x_j$
+is false with probability  $1-p_j^\star$  and a negative literal $\overline{x_j}$ is false with
+probability $p_j^\star$, so
+\begin{eqnarray}
+\label{eq:maxsat:1}\pr{X_i=1}&=&1-\prod_{j\in C_i^+}(1-p_j^\star)\cdot\prod_{j\in C_i^-}p_j^\star\\
+\label{eq:maxsat:2}&\ge&1-\left(\frac{\sum_{j\in C_i^+}(1-p_j^\star)+\sum_{j\in C_i^-}p_j^\star}{s(C_i)}\right)^{s(C_i)}\\
+&=&1-\left(1-\frac{\sum_{j\in C_i^+}p_j^\star+\sum_{j\in C_i^-}(1-p_j^\star)}{s(C_i)}\right)^{s(C_i)}\notag\\
+\label{eq:maxsat:3}&\ge&1-\left(1-\frac{z_i^\star}{s(C_i)}\right)^{s(C_i)}
+\end{eqnarray}
+where the inequality (\ref{eq:maxsat:2}) is an application of the arithmetic-geometric inequality
+$$\frac{a_1+\cdots+a_n}{n}\ge\sqrt[n]{a_1\cdot\cdots\cdot a_n},$$
+and the inequality (\ref{eq:maxsat:3})
+follows from the constraints of the program (\ref{LP:maxsat:prog2}). 
+Our next immediate goal is to express a bound on  \pr{X_i=1}
+from the line (\ref{eq:maxsat:3}) as a linear function, i.e.
+$\pr{X_i=1}\ge\beta z_i^\star$ for some $\beta$ that may depend on $C_i$ but is independent on  $z_i^\star$.
+Denote
+$$g_k(z):=1-\left(1-\frac{z}{k}\right)^k$$
+the function of  $z$ with $k\ge1$ as a parameter. We have $g_k(0)=0$ and  $g_k(k)=1$. 
+Immediately, we can compute
+\begin{eqnarray*}
+g'_k(z) &=& \left(1-\frac{z}{k}\right)^{k-1} \\
+g''_k(z) &=& -\frac{k-1}{k-z}\left(1-\frac{z}{k}\right)^{k-2},
+\end{eqnarray*}
+so we see that  $g_k(z)$ is on the interval $[0,k]$ increasing ($g'_k(z)>0$), and concave ($g''_k(z)<0$).
+Hence the whole graph of $g_k(z)$ on the interval $[0,1]$ is below the line conecting points $[0,0]$, and
+$[1,g_k(1)]$. Thus it follows that for $z\in[0,1]$ it holds  $g_k(z)\ge g_k(1)z$.
+Now returning to the inequality (\ref{eq:maxsat:3}),
+we get
+
+
+\noindent
+\begin{minipage}[t]{0.5\textwidth}
+$$\pr{X_i=1}\ge g_{s(C_i)}(1)z_i^\star.$$
+Denote 
+$$\beta(k):=g_k(1)=1-\left(1-\frac{1}{k}\right)^k$$ a function of the variable  $k$.
+For the expectation of \alg{A2} we have
+\begin{equation}
+\label{eq:maxsat:A2}
+\ev{W}\ge\sum_{i=1}^m\omega_i\beta\left(s(C_i)\right)z_i^\star.
+\end{equation}
+With increasing $h$, the value $\beta(k)$
+decreases, so if all clauses have at most $k$ literals, we have
+$$\ev{W}\ge\beta(k)\sum_{i=1}^m\omega_iz_i^\star.$$
+\end{minipage}\hspace*{0.05\textwidth}\begin{minipage}[t]{0.45\textwidth}
+\begin{myfig}{\textwidth}{svg/maxsat1}
+\end{myfig}
+\end{minipage}
+
+\vspace*{-3ex}
+\noindent
+Now we can invoke Theorem~\ref{thm:derandom} 
+and construct a deterministic algorithm \alg{A2det};
+the corresponding conditional probabilities will be computed analogously according to line
+(\ref{eq:maxsat:1}).
+
+\subsubsection*{Final algorithm with guaranteed $3/4\cdot Z$ }
+
+\noindent
+So far we have two algorithms: \alg{A1det} that works good on instances with long clauses, and
+\alg{A2det} that performs well on instances with short clauses. What can we do on instances that contain both
+short and long clauses? We do the most simple of all thing: run both algorithms, and choose the better 
+of the two results. From 
+ (\ref{eq:maxsat:A1}), (\ref{eq:maxsat:A2}), and from Theorem~\ref{thm:derandom} 
+we get for the outcome of the algorithms  
+\alg{A1det} and \alg{A2det} on a formula $F$:
+\begin{align*}
+  \alg{A1det}(F) & \ge \sum_{i=1}^m\omega_i\left(1-\frac{1}{2^{s(C_i)}}\right) &
+\alg{A2det}(F) & \ge \sum_{i=1}^m\omega_i\beta\left(s(C_i)\right)z_i^\star
+\end{align*}
+Denote $\alpha(k):=1-2^{-k}$, and bound 
+the better of the two algorithms (i.e. the maximum of the values) by their average:
+
+\noindent
+\begin{minipage}[t]{0.4\textwidth}
+  \begin{flalign*}
+    &\max\{\alg{A1det}(F), \alg{A2det}(F)\}&\\
+    \ge &\frac{1}{2} (\alg{A1det}(F)+ \alg{A2det}(F))& \\
+    \ge &\frac{1}{2}\sum_{i=1}^m\omega_i\left(\beta(s(C_i))z_i^\star+\alpha(s(C_i))\right)&\\
+    \ge &\sum_{i=1}^m\omega_iz_i^\star\left(\frac{\alpha(s(C_i))+\beta(s(C_i))}{2}\right)\\
+  \end{flalign*}
+\end{minipage}\hspace*{0.1\textwidth}\begin{minipage}[t]{0.5\textwidth}
+\begin{myfig}{0.96\textwidth}{svg/maxsat2}
+\end{myfig}
+\end{minipage}
+
+\vspace*{-1ex}
+\noindent
+where the last inequality follows from the fact that $z_i^\star\le 1$. Let us now focus on the $i$-th 
+clause: let $s(C_i)=k$. What can we say about the average
+$\frac{1}{2}(\alpha(k)+\beta(k))$?
+For $k\in\{1,2\}$, the $\frac{1}{2}(\alpha(k)+\beta(k))=\frac{3}{4}$. For $k\ge2$ the average is an increasing
+function, so we can sum it all up to
+$$\max\{\alg{A1det}(F), \alg{A2det}(F)\}\ge\frac{3}{4}\sum_{i=1}^m\omega_iz_i^\star\ge\frac{3}{4}OPT.$$
+

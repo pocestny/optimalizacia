@@ -1,0 +1,731 @@
+% % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
+\section{Deterministické zaokrúhľovanie}
+
+V predchádzajúcej kapitole sme pri probléme \minvcover použili nasledovnú všeobecnú schému
+na navrhovanie $r$-aproximačných algoritmov:
+
+\begin{myfig}{0.7\textwidth}{svg/generalminrelax}
+\end{myfig}
+
+\noindent
+Ak hľadáme minimum celočíselného programu s hodnotou $m^\star$, nájdeme (potenciálne menšie) 
+minimum relaxovaného programu s hodnotou $m^\star_Q$, zaokrúhlime ho a dostaneme riešenie s hodnotou $m$.
+Ak ukážeme, že pri zaokrúhľovaní hodnota riešenia stúpla najviac $r$-krát, máme zaručený $r$-aproximačný algoritmus.
+To, čo sme nazvali zaokrúhlenie, však nemusí byť jednoduché aritmetické zaokrúhlenie, ale hocijaký deterministický
+algoritmus. Uvedieme teraz príklad takéhoto rafinovaného zaokrúhľovania.
+
+
+\subsection*{\minmulticut}
+
+Ako motivačný príklad zoberme nasledovný problém\footnote{porov.
+\cite{BBC04,EF03}}: máme databázu textov, v ktorých sa vyskytujú odkazy na
+rôzne osoby a našim cieľom je rozlíšiť, kedy sa hovorí o tej istej osobe a kedy
+nie. To nemusí byť také ľahké, ako sa na prvý pohľad zdá, lebo tá istá osoba sa
+niekedy referencuje celým menom, niekedy iniciálami, niekedy prezývkou, niekedy
+nepriamo pozíciou (napr. ''britský premiér'') a pod.  Predpokladajme, že máme k
+dispozícii (napríklad ako výstup algoritmov strojového učenia na tréningovej množine dát)  
+nejaký prediktor, čo je funkcia, ktorá pre dve referencie vráti
+reálne číslo, pričom čím väčšia kladná hodnota, tým väčšia šanca, že ide o tú
+istú osobu a čím menšia záporná hodnota, tým skôr ide o dve rôzne osoby (0
+znamená, že ani prediktor netuší). Máme teda daný graf, ktorého vrcholy sú jednotlivé výskyty a hrany sú
+ohodnotené kladnými alebo zápornými číslami.
+Našim cieľom je rozdeliť vrcholy na komponenty, pričom každý komponent zodpovedá jednej osobe. 
+Keďže prediktor nie je úplne spoľahlivý, nie vždy existuje rozdelenie, ktoré je s ním konzistentné. Chceme
+preto nájsť rozdelenie, ktoré minimalizuje celkovú chybu: ak kladná hrana spája dva komponenty, alebo záporná
+hrana je vovnútri komponentu, ich váha (v absolútnej hodnote) sa priráta k celkovej chybe.
+
+\begin{myfig}{0.3\textwidth}{svg/clustering}
+  Graf a jeho rozdelenie  s celkovou chybou 8: kladné hrany s váhami 4 a 1 idú medzi rôznymi komponentami a 
+  záporná hrana s váhou -3 je vnútri komponentu.
+\end{myfig}
+
+\noindent
+Úloha nájsť rozdelenie s minimálnou chybou je \NP-ťažká, preto sa skromne uspokojíme s približným riešením.
+Pretransformujme si náš graf takto: kladné hrany zachováme. Pre každú zápornú hranu $(u,v)$ s váhou $-w$
+pridáme do grafu nový vrchol $\langle u,v\rangle$, ktorý spojíme hranou váhy $w$ s vrcholom $v$.
+Dostaneme tak graf s kladným ohodnotením hrán a v ňom budeme riešiť nasledovnú úlohu: chceme z neho odobrať
+hrany s minimálnou váhou tak, aby v zostávajúcom grafe neboli vrcholy $\langle u,v\rangle$ a $u$ v rovnakom 
+komponente súvislosti.
+
+\begin{prob}
+  Dokážte, že táto transformácia je ekvivalentná, t.j. ak máme riešenie pôvodného problému s celkovou chybou $c$,
+  existuje riešenie transformovaného problému s váhou  $c$ a naopak, ak máme riešenie transformovaného
+  problému s váhou $c$, tak existuje riešenie pôvodného problému s celkovou chybou $c$.
+\end{prob}
+
+\begin{myfig}{0.7\textwidth}{svg/clustering2}
+  Pôvodný a transformovaný graf (keďže pôvodný graf je neorientovaný, transformácia nie je jednoznačná).
+  Pridané vrcholy sú zelené, bodkovanou čiarou sú spojené vrcholy, ktoré musia byť v rôznych komponentoch.
+\end{myfig}
+
+\noindent
+Transformovaný problém je špeciálnym prípadom úlohy \minmulticut:
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:multicut}
+    Majme daný jednoduchý graf $G=(V,E)$ s hranami ohodnotenými nezápornými váhami, t.j. funkciou 
+$\omega:E\mapsto \R^+$ a v ňom $k$ dvojíc vrcholov $(s_i,t_i)$, $i=1,\ldots,k$. Cieľom problému
+\minmulticut je odobrať z grafu $G$ množinu hrán s minimálnou celkovou váhou tak, aby 
+žiadna dvojica $(s_i,t_i)$ nebola v rovnakom komponente súvislosti výsledného grafu.
+  \end{dfn}
+\end{framed}
+
+\begin{myfig}{0.55\textwidth}{svg/multicut}
+Riešenie inštancie problému \minmulticut s celkovou cenou 12.
+\end{myfig}
+
+\noindent
+Špeciálnym prípadom pre $k=1$ je problém nájdenia minimálneho rezu, ktorý je polynomiálne riešiteľný,
+ale pre všeobecné $k$ je \minmulticut \NP-ťažký. Pokúsme sa teraz formulovať problém \minmulticut
+ako celočíselný lineárny program. Pre každú hranu $e$  budeme mať premennú $x_e\in\{0,1\}$, ktorá bude
+určovať, či sme hranu odstránili alebo nie. Chceme odstrániť hrany s minimálnou váhou, preto
+chceme minimalizovať výraz $\sum_{e\in E}x_e\omega(e)$. Obmedzeniami potrebujeme zaručiť, aby vrcholy 
+$(s_i,t_i)$ boli v rôznych komponentoch. Označme si ${\cal P}_{s_i,t_i}$ všetky $s_i-t_i$ cesty, t.j. všetky cesty 
+v $G$, ktoré začínajú v $s_i$ a končia v $t_i$. Potrebujeme, aby na každej z nich bola vybratá aspoň
+jedna hrana. Dostávame teda program (obmedzenie $x_e\le 1$ nemusíme písať explicitne, lebo
+vyplýva z minimalizácie: ak je nejaké $x_e>1$, môžme ho zmenšiť na 1, obmedzenia ostanú zachované a hodnota
+riešenia klesne):
+
+
+\begin{equation}
+\label{LP:multicut:prog1}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{ \sum\limits_{e\in E}x_e\omega_e}\\
+  {\rm pri\ obmedzeniach} & \sum\limits_{e:e\in\pi}x_e&\ge&1& \;\;\;
+                              \forall i\in\{1,\ldots,k\},\;\; \forall \pi\in {\cal P}_{s_i,t_i}\\
+                          & x_e&\ge&0& \;\;\;\forall e\in E\\
+                          & x_e&\in&\Z
+\end{array}
+\end{equation}
+
+
+\noindent
+Program (\ref{LP:multicut:prog1}) teraz relaxujeme tak, že odstránime obmedzenia $x_e\in\Z$. Dostaneme lineárny program
+
+\begin{equation}
+\label{LP:multicut:prog2}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{ \sum\limits_{e\in E}x_e\omega_e}\\
+  {\rm pri\ obmedzeniach} & \sum\limits_{e:e\in\pi}x_e&\ge&1& \;\;\;
+                              \forall i\in\{1,\ldots,k\},\;\; \forall \pi\in {\cal P}_{s_i,t_i}\\
+                          & x_e&\ge&0& \;\;\;\forall e\in E\\
+\end{array}
+\end{equation}
+
+\noindent
+ktorý môžme interpretovať nasledovne: 
+hranám chceme priradiť dĺžky $x_e$ tak, aby každá dvojica vrcholov $(s_i,t_i)$ bola vzdialená aspoň 1.
+Zároveň, ak $\omega_e$ bude prierez hrany, tak $\sum_{e\in E}x_e\omega_e$ hovorí, že chceme minimalizovať 
+objem všetkých hrán (hrubé hrany chceme mať krátke).
+Náš relaxovaný program má ale ešte jednu chybu: má potenciálne exponenciálne veľa obmedzení, takže
+simplexovým algoritmom ho nevieme efektívne vyriešiť. Upravme ho preto takto: uvažujme všetky cesty 
+$\pi\in{\cal P}_{s_i,t_i}$. Namiesto explicitnej podmienky $\sum_{e\in\pi}x_e\ge1$ pre každú cestu, priraďme každému
+vrcholu $v$ potenciál $p_v^{(i)}\in\R$ tak, že $p_{t_i}^{(i)}-p_{s_i}^{(i)}\ge1$. Každej ceste 
+$\pi: s_i=v_1,v_2,\ldots,v_z=t_i$
+prislúcha postupnosť potenciálov vrcholov $p_{v_1}^{(i)},p_{v_2}^{(i)},\ldots,p_{v_z}^{(i)}$. Ak 
+vynútime, aby dľžka kaťdej hrany cesty bola aspoň rozdiel potenciálov, t.j.
+$x_{(v_j,v_{j+1})}\ge p_{v_{j+1}}^{(i)}-p_{v_j}^{(i)}$, budeme mať zaručené, 
+že celá cesta bude mať dĺžku aspoň jednaa.
+Namiesto programu  (\ref{LP:multicut:prog2}) nám teda stačí riešiť polynomiálne veľký program
+
+\begin{equation}
+\label{LP:multicut:prog3}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{ \sum\limits_{e\in E}x_e\omega_e}\\
+  {\rm pri\ obmedzeniach} & x_e&\ge&p_v^{(i)}-p_u^{(i)}& \;\;\;
+                              \forall i\in\{1,\ldots,k\},\;\; \forall e\in E, \;e=(u,v)\\
+                          & x_e&\ge&p_u^{(i)}-p_v^{(i)}\\
+                          & p_{t_i}^{(i)}-p_{s_i}^{(i)}&\ge&1& \;\;\;
+                              \forall i\in\{1,\ldots,k\}\\
+\end{array}
+\end{equation}
+
+\noindent
+Na jednej strane, každé riešenie programu (\ref{LP:multicut:prog3}) spĺňa podmienky programu  (\ref{LP:multicut:prog2}),
+na druhej strane, ak máme riešenie programu  (\ref{LP:multicut:prog2}), nastavíme potenciály $p_{v}^{(i)}$ ako
+vzdialenosť $v$ od $s_i$, kde za dĺžku hrany berieme $x_e$. Ľahko vidno, že takto nastavené potenciály spĺňajú podmienky
+programu  (\ref{LP:multicut:prog3}), a teda programy  (\ref{LP:multicut:prog2}) a  (\ref{LP:multicut:prog3}) sú ekvivalentné.
+
+
+\noindent
+Program (\ref{LP:multicut:prog3}) môžme vyriešiť napr. simplexovým algoritmom a dostaneme optimálne riešenie
+s hodnotami premenných $x_e^\star$ a cenou $m_Q^\star=\sum_{e\in E}x_e^\star\omega_e$. Keby všetky $x_e^\star\in\{0,1\}$,
+mali by sme priamo riešenie programu (\ref{LP:multicut:prog1}) a teda aj problému \minmulticut. 
+Keď to skúsime s grafom z predchádzajúceho obrázka, zistíme, že optimálne riešenie  (\ref{LP:multicut:prog3})
+je celočíselné. To vyzerá nádejne, tak môžme skúsiť napríklad takýto experiment: zoberieme všetkých $510 489$ kubických
+(t.j každý vrchol je susedný s troma inými) grafov na $20$ vrcholoch, váhy hrán ponecháme na 1, 
+a pre každý graf si náhodne vygenerujeme  $k\in\{1,\ldots,20\}$ dvojíc $s_i, t_i$. Experiment dopadol tak,
+že spomedzi $510 489$ riešení bolo $268 178$ ($52.5\%$) celočíselných, $135 328$ ($26.5\%$) poloceločíselných
+a dokopy bolo $458 008$ ($89.7\%$) riešení s najmenšou nenulovou hodnotou $\ge\frac{1}{4}$.
+Jednoduchým zaokrúhlením všetkého nenulového nahor preto v $89.7\%$ prípadov dostaneme prinajhoršom 4-aproximáciu.
+Prv, než by nás nedôslednosť zviedla k nejakým unáhleným záverom, pozrime si bližšie tých $10.3\%$
+zvyšných prípadov. 
+Skutočnosť totiž môže byť taká, že takéto zlé prípady nie sú až také ojedinelé, iba v našich testovacích 
+dátach sa vyskytujú zriedkavo.
+Zlé boli napospol prípady, v ktorých bolo veľké $k$, t.j 
+veľa dvojíc $s_i,t_i$. Zoberme si niektorý z testovaných grafov a skúsme vyriešiť inštanciu,
+do ktorej zahrnieme všetky dvojice vrcholov vo vzdialenosti aspoň $4$.
+
+\begin{myfig}{\textwidth}{svg/multicut2}
+  Vľavo je graf s 20 vrcholmi a 30 hranami (všetky hrany majú váhu 1). 
+  Uvažujeme inštanciu \minmulticut, v ktorej treba oddeliť každú dvojicu
+vrcholov vo vzdialenosti aspoň 4 (priemer grafu je 5, dvojíc vo vzdialenosti aspoň 4 je 22). V strede je optimálne
+riešenie relaxovaného LP (čísla na hranách sú násobky $\frac{1}{15}$) s hodnotou 7. Keďže iba päť hrán
+v riešení je nulových, zaokrúhlením nahor získame riešenie s hodnotou 25. Vpravo je celočíselné riešenie
+s hodnotou 8: po odstránení 8 čiarkovaných hrán sa graf rozpadne na tri komponenty a každý z nich má priemer najviac 3. 
+\end{myfig}
+
+
+\noindent
+Vidíme, že jednoduché zaokrúhlenie môže dávať zlé výsledky, a preto má zmysel rozmýšľať nad lepším
+''zaokrúhľovacím'' algoritmom.
+Označme $m^\star$ optimálnu cenu riešenia problému \minmulticut: platí
+platí $m_Q^\star\le m^\star$. Ukážeme si teraz, ako ''zaokrúhliť'' hodnoty $x_e^\star$ (t.j. vybrať
+hrany do rezu) tak, aby sme
+dostali riešenie problému \minmulticut s cenou najviac $4\ln(2k)m_Q^\star$.
+
+\noindent
+Náš ''zaokrúhľovací'' algoritmus 
+bude postupne z grafu ''vyhrýzať'' množiny $V_1,V_2,\ldots,V_k$. V prvej iterácii nájde množinu $V_1$ tak,
+že $s_1\in V_1$, $t_1\not\in V_1$ a zároveň žiadna dvojica $s_i, t_i$ nie je vo $V_1$. Algoritmus vyberie
+do rezu hrany oddeľujúce $V_1$ od zvyšku grafu a pokračuje s grafom na vrcholoch $V-V_1$. V $i$-tej iterácii,
+ak $s_i$ alebo $t_i$ už nie sú v grafe (aspoň jeden z nich tam určite bude), tak $V_i=\emptyset$, ináč
+sa nájde $V_i$ tak, aby $s_i\in V_i$ a $t_i\not\in V_i$ a aby žiadna dvojica $s_j,t_j$ nebola vo $V_i$;
+$V_i$ sa odstráni z grafu (t.j. vyberú sa do rezu všetky hrany, ktoré oddeľujú $V_i$).  
+Algoritmus takto postupne vytvorí rez, ktorý odseparuje každú dvojicu $s_i, t_i$. 
+Ako vyberať množiny $V_i$ a využiť pri tom optimálne riešenie relaxovaného problému?
+
+
+\noindent
+Zoberme si hodnoty $x_e^\star$ a predstavme si optimálne riešenie (\ref{LP:multicut:prog2})  ako sieť potrubí, 
+kde hrana $e$ má prierez $\omega_e$ a
+dĺžku $x_e^\star$, t.j. má objem $\omega_ex_e^\star$. Pre hranu $e=(u,v)$ označme $d(u,v)=x_e^\star$ a 
+prirodzeným spôsobom môžme merať vzdialenosť ľubovoľných dvoch vrcholov $d(v_1,v_2)$. 
+Keď algoritmus vyberie nejakú množinu $V_i$, musí prerezať všetky potrubia, ktoré ju oddeľujú od zvyšku grafu,
+pričom za prerezanie potrubia $e$ zaplatí jeho prierez, t.j. $\omega_e$.
+Z prípustnosti riešenia vieme, že pre každú dvojicu $s_i,t_i$ je $d(s_i,t_i)\ge1$ a 
+optimálne riešenie  (\ref{LP:multicut:prog2})  minimalizuje
+celkový objem hrán, t.j. 
+$$\Psi:=\sum_{e=(u,v)\in E}\omega_ed(u,v)$$
+Označme $G_r'=(V_r',E_r')$ graf, ktorý vznikne po odstránení množín 
+$V_1,\ldots,V_{r-1}$ z grafu $G$. Prirodzeným spôsobom si zadefinujeme pojem gule s polomerom $\rho$:
+$${\cal B}_\rho(v)=\{u\in V_r'\mid d(u,v)\le\rho\}$$
+Ak $G_r'$ obsahuje $s_r$ aj $t_r$, 
+množina $V_r$ bude guľa vhodného polomeru $\rho$ okolo vrchola $s_r$. Ostáva nám určiť, ako vybrať $\rho$. V prvom rade
+chceme, aby $\rho<1/2$, čo nám zaručí, že žiadna dvojica $s_j,t_j$ 
+nebude ležať vo $V_r$ (vzdialenosť každej dvojice je aspoň 1).
+Nech vnútorné hrany gule sú
+$${\cal E}_\rho(v)=\{(w,z)\in E_r'\mid w,z\in{\cal B}_\rho(v)\}$$
+a hranová hranica gule je
+$$\overline{\cal E}_\rho(v)=\{(w,z)\in E_r'-{\cal E}_\rho(v)\mid w\in{\cal B}_\rho(v)\vee z\in{\cal B}_\rho(v)\}$$
+Objem gule definujeme (mierne neštandardne) tak, že okrem objemu hrán pridáme z technických dôvodov člen $\Psi/k$:
+$$V_\rho(v)=\frac{\Psi}{k}+\sum_{(w,z)\in{\cal E}_\rho(v)}\omega_{(w,z)}d(w,z)+
+\sum_{(w,z)\in\overline{\cal E}_\rho(v)}\omega_{(w,z)}\left(\rho-\min(d(v,w),d(v,z))\right)$$
+Vnútorné hrany gule prispievajú do jej objemu celým svojím objemom, hrany z hranovej hranice iba príslušnou časťou.
+Najviac nás, pochopiteľne, zaujíma cena gule, t.j. veľkosť jej hranového rezu:
+
+\noindent
+\begin{minipage}[t]{0.5\textwidth-1cm}
+\noindent
+$$C_\rho(v)=\sum_{(w,z)\in\overline{\cal E}_\rho(v)}\omega_{(w,z)}$$
+Konečne sa dostávame k tomu, ako zvoliť polomer $\rho$ v množine $V_r$. Chceme, aby guľa, ktorú odseparujeme mala čo 
+najmenšiu jednotkovú cenu, t.j.
+$$F_\rho(v)=\frac{C_\rho(v)}{V_\rho(v)}$$
+Funkcia $F:\rho\mapsto F_\rho(v)$ pre daný vrchol $v$ má body nespojitosti pre tie hodnoty $\rho$, pre ktoré
+existuje vrchol $w$ vo vzdialenosti $\rho$ od $v$. Na každom intervale medzi bodmi nespojitosti je $F$ diferencovateľná
+a klesajúca.
+Preto môžme ľahko nájsť minimum $F_\rho(s_i)$ na intervale $(0,1/2)$: vyberieme minimum z hodnôt 
+$F_\rho(s_i)$ pre $\rho=\delta(s_i,u)-\varepsilon$.
+Ostáva nám ukázať, že takto získaný rez je naozaj dobrou aproximáciou. Na to ukážeme nasledovné tvrdenie:
+\end{minipage}\hspace*{1cm}\begin{minipage}[t]{0.5\textwidth}
+\begin{myfig}{0.7\textwidth}{svg/multicut3}
+  Predstava relaxovaného riešenia ako siete potrubí. Pri hranách je napísaná ich dĺžka ($x_e^\star$) a v zátvorke 
+  prierez ($\omega_e$). 
+  Guľa s polomerom $0.4$ má cenu $13$ a objem $\frac{\Psi}{k}+4.65$. Ak polomer vzrastie na $0.6$, cena ostane rovnaká,
+  ale objem stúpne.
+\end{myfig}
+\end{minipage}
+\noindent
+\begin{equation}
+\label{eq:cut1}
+\forall v\exists\rho<1/2:\;F_\rho(v)\le2\ln(2k)
+\end{equation}
+
+\begin{myfig}{\textwidth}{svg/multicut4}
+  Funkcia $F$ pre jeden vrchol $v$ z predchádzajúceho príkladu. Optimum je $\Psi=7$ a $k=22$.
+  Do vzdialenosti $\frac{2}{15}\approx 0.13$ je vnútro gule prázdne a veľkosť rezu
+  je 3, preto pre $0\le\rho<\frac{2}{15}$ je $F_\rho(v)=\frac{3}{\frac{7}{22}+3\rho}$.
+  Pre $\frac{2}{15}\le\rho<\frac{3}{15}=0.2$ vnútro gule obsahuje dva vrcholy a celú hranu dĺžky $\frac{2}{15}$;
+  veľkosť rezu je 4, preto na tomto intervale $F_\rho(v)=\frac{4}{\frac{7}{22}+\frac{2}{15}+2\rho+2(\rho-\frac{2}{15)}}
+  \approx\frac{4}{0.18+4\rho}$. Ďalej až po vzdialenosť $\frac{5}{15}=\frac{1}{3}$ 
+  vnútro obsahuje tri vrcholy a dve hrany s celkovým objemom $0.2$, pričom v reze je 5 hrán, atď.
+\end{myfig}
+
+\noindent
+Z tvrdenia (\ref{eq:cut1}) vyplynie požadovaná aproximácia: nech algoritmus vyberie gule ${\cal B}_{\rho_1}(s_{i_1}),\ldots,
+{\cal B}_{\rho_h}(s_{i_h})$. Cena rezu je
+$$m=\sum_{j=1}^hC(s_{i_j},\rho_j)\le2\ln(2k)\sum_{j=1}^hV(s_{i_j},\rho_j)$$
+V poslednej sume sa členy $\Psi/k$ z definície objemu zosumujú najviac do $\Psi$ a zvyšné objemy opäť
+najviac do $\Psi$, a teda $m\le2\ln(2k)2\Psi$.
+
+\vskip 4pt
+\noindent
+Dôkaz dokončíme dôkazom tvrdenia (\ref{eq:cut1}): Fixujme si vrchol $v$ a uvažujme všetky funkcie
+ako funckie vzdialenosti $\rho$. Ak $V(\rho)$ je diferencovateľná, platí
+$V'(\rho)=C(\rho)$. Preto
+$$F(\rho)=\frac{V'(\rho)}{V(\rho)}=\left[\ln V(\rho)\right]'$$
+Tvrdenie (\ref{eq:cut1}) dokážeme sporom: predpokladajme, že pre všetky $\rho<1/2$ platí 
+$F(\rho)>2\ln(2k)$. Ak $F$ je diferencovateľná na intervale $(0,1/2)$, máme
+$$\left[\ln V(\rho)\right]'>2\ln(2k)$$
+obe strany zintegrujeme určitým integrálom od $0$ po $1/2$ a dostaneme
+$$\ln\frac{V\left(\frac{1}{2}\right)}{V(0)}>\ln2k$$
+a odtiaľ 
+$$V\left(\frac{1}{2}\right)>2kV(0)=2\Psi$$
+čo je spor, lebo $V(\rho)\le\Psi+\Psi/k$.
+Ak $F$ nie je diferencovateľná na intervale $(0,1/2)$, zopakujeme predchádzajúcu úvahy na každom inetrvale
+spojitosti a výsledky sčítame.
+
+
+\vskip 2ex
+\noindent
+Predcchádzjúce úvahy môžme zhrnúť do tvrdenia:
+\begin{veta}
+  Existuje algoritmus, ktorý pre problém \minmulticut vráti v polynomiálnom čase riešenie s veľkosťou
+  nanajvýš $4\ln(2k)$-násobku optima.
+\end{veta}
+
+\noindent
+Garancia, ktorú sme práve dokázali, sa zdá byť pomerne slabá a čakali by sme, že vo veľa prípadoch budú skutočné
+výsledky nášho algoritmu lepšie. Je to naozaj tak? Môžme prípadne dokázať silnejšiu garanciu?
+Ukážeme si, že to nie je možné. Zoberme si regulárny graf $G$, ktorý má $n$
+vrcholov a každý vrchol má stupeň $d\ge3$. Zvoľme si nejaký parameter $\alpha$ a uvažujme inštanciu
+\minmulticut na grafe $G$, kde všetky hrany majú váhu 1 a dvojice $s_i,t_i$, ktoré treba rozpojiť,
+sú všetky dvojice vrcholov vo vzdialenosti aspoň $\alpha$. Keď pre každú hranu $e$ zvolíme $x_e=\frac{1}{\alpha}$,
+dostaneme prípustné riešenie programu (\ref{LP:multicut:prog2}), a preto $m^\star_Q\le\frac{n}{\alpha}$.
+Ukážeme teraz, ako docieliť, aby ľubovoľné celočíselné riešenie 
+malo veľkosť aspoň $n$. 
+Nech $M$ je optimálne celočíselné riešenie, t.j. množina hrán, ktorá rozpojí všetky vrcholy
+vo vzdialenosti aspoň $\alpha$. Odstránením $M$ z $G$ dostaneme graf $G'=(V,E-M)$
+s niekoľkými komponentami súvislosti, pričom platí:
+
+\begin{lema}
+  Každý komponent súvislosti $G'$ má najviac $d^\alpha$ vrcholov.
+\end{lema}
+\begin{dokaz}
+  Predpokladajme sporom, že by existoval komponent $K$ s viac ako $d^\alpha$ vrcholmi. Zoberme si hocijaký 
+  vrchol $v\in K$. Vrchol $v$ má v $G$ stupeň $d$, teda aj v $K$ má najviac $d$ susedov. Každý z nich 
+  má opäť najviac $d$ susedov, preto v celom $G$ (a teda aj v $K$) môže byť najviac $d+d(d-1)<d+d^2$ vrcholov
+  vo vzdialenosti najviac $2$ od $v$. Pokračujme indukciou a dostaneme, že môže byť
+  najviac $d+d^2+\cdots+d^{\alpha-1}$ vrcholov vo vzdialenosti nanajvýš $\alpha$ od $v$.
+  Lenže $1+d+d^2+\cdots+d^{\alpha-1}=\frac{d^\alpha-1}{d-1}<d^\alpha$, preto v $K$ existuje vrchol $w$, ktorý
+  je od $v$ ďalej ako $\alpha$. Vrcholy  $v,w$ ale tvorili nejakú dvojicu $s_i, t_i$, 
+  preto nesmú byť v jednom komponente, čo je 
+  spor.
+\end{dokaz}
+
+\noindent
+Nech teraz $S_1,\ldots,S_h$ sú komponenty súvislosti $G'$. 
+Označme $\delta(S)$ hranovú hranicu množiny $S$, t.j. tie hrany, ktoré majú jeden koniec v $S$ a druhý mimo $S$.
+Pretože každá hrana má dva konce, platí $2|M|=\sum_{i=1}^h|\delta(S_i)|$. Pretože každý vrchol je v nejakom komponente
+súvislosti (vyhadzovali sa iba hrany), máme $\sum_{i=1}^h|S_i|=n$.
+V ďalších  úvahách použijeme užitočný nástroj: expandéry. Sú to grafy, v ktorých z každej množiny vrcholov
+odchádza ``veľa'' hrán.
+
+\noindent
+\begin{framed}
+  \begin{dfn}
+    Graf $G=(V,E)$ nazveme {\em expandérom}, ak pre každú množinu vrcholov $S\subset V$ platí
+    $$|\delta(S)|\ge\min \{ |S|, |\overline{S}|\},$$
+    kde $\overline{S}=V-S$. 
+  \end{dfn}
+\end{framed}
+
+\noindent
+Predpokladajme teraz, že náš graf $G$ je expandér a zvoľme si $\alpha=\lfloor\log_d n/2\rfloor$. Pretože
+$d^\alpha\le n/2$, každý komponent súvislosti v $(V,E-M)$ má najviac $n/2$ vrcholov, a teda dostávame
+$$|M|=\frac{1}{2}\sum_{i=1}^h|\delta(S_i)|\ge\frac{1}{2}\sum_{i=1}^h|S_i|=\frac{n}{2}.$$
+Keď si to zhrnieme, máme inštanciu na grafe stupňa $d$ s $n$ vrcholmi, kde optimálny multirez má $\Omega(n)$
+hrán, ale existuje relaxované riešenie  s cenou $O\left(\log d\frac{n}{log n}\right)$. Zároveň máme
+$k=\Theta(n^2)$ dvojíc $s_i,t_i$, lebo pre každý vrchol je aspoň $n/2$ vrcholov vo vzdialenosti aspoň $\alpha$.
+Ak chceme docieliť, aby parametre $n$ a $k$ boli nezávislé, stačí pre nejaké $\ell$ nahradiť 
+každú hranu cestou dĺžky $\ell$ a ponechať dvojice $s_i, t_i$: počet vrcholov narastie, ale aproximačný
+faktor ostane rovnaký. Vidíme teda, že náš zaokrúhľovací algoritmus nemôže dať v najhoršom prípade
+lepší výsledok ako $O(\log k)$-násobok optima.
+
+\noindent
+Ostáva posledná otázka, či vôbec expandéry existujú a či sú zriedkavé. Existujú a vyskytujú sa často, ale
+sú plaché. Nájsť deterministické konštrukcie, ktoré by zaručene vyrobili
+expandér je pomerne náročné. Na druhej strane, nie je príliš ťažké ukázať (aj keď to tu neurobíme),
+že väčšina regulárnych grafov sú expandéry.
+
+\IGNORE{ %% TODO DO APPENDIXU
+Dá sa však ukázať, že náhodne vybratý regulárny graf je s veľkou pravdepodobnosťou expandér.
+Na dôkaz tohto tvrdenia by sme ale potrebovali povedať, čo myslíme "náhodne vybratým" grafom --
+špecifikovať pravdepodobnostné rozdelenie, z ktorého vyberáme. Intuitívne je asi očakávané,
+že zoberieme všetky $n$-vrcholové $d$-regulárne grafy (neočíslované, t.j. izomorfné
+grafy považujeme za jeden a ten istý) a z nich vyberieme rovnomerne náhodne. S týmto rozdelením
+sa ale zle pracuje, ničmenej pre záujemcov uvedieme jednoduchšie tvrdenie, ktoré zachytáva
+hlavné myšlienky dôkazu:
+
+
+\begin{veta-star}
+  Existuje randomizovaná procedúra, ktorá pre zadané $n$, $d$ s veľkou pravdepodobnosťou nájde 
+  $n$-vrcholový $d$-regulárny expandér.
+\end{veta-star}
+
+\begin{dokaz}
+  Zoberme si $d$-ticu permutácií $n$ prvkov $\pi_1,\ldots,\pi_d$; takýto objekt budeme volať {\em vrtuľa}
+  a vieme z nej zostrojiť  bipartitný graf s $n$-prvkovými partíciami $A$, $B$ tak, že $i$-ty 
+  vrchol z $A$ spojíme
+  s vrcholmi $\pi_1(i),\pi_2(i),\ldots,\pi_d(i)$ (náš graf možno bude mať násobné hrany, ale to nevadí).
+  Každá permutácia definuje úplné párovanie (1-faktor) a vzniknutý bipartitný graf je zjednotením $d$
+  1-faktorov. 
+  Vrtuľu nazveme {\em zlá}, ak v takto zostrojenom grafe existuje nejaká množina $X\subset A$ a 
+  množina $Y\subset B$ tak, že $|X|\le\frac{n}{2}$, $|Y|\le\frac{3}{2}|X|$ a všetky hrany z $X$ končia v $Y$, t.j.
+  $$\forall i\in X\;j\in\{1,\ldots,d\}:\;\pi_j(i)\in Y,$$
+  resp. symetricky pre $X\subset B$ a $Y\subset A$.
+  Jadrom dôkazu bude ukázať, že náhodne vybratá vrtuľa je dobrá. Z dobrej vrtule totiž vieme vyrobiť expandér tak,
+  že ''zlepíme'' bipartície $A$ a $B$.
+  \begin{myfig}{0.8\textwidth}{svg/vrtula}
+  Vrtuľa $[2,5,1,8,3,6,4,7]$, $[3,1,5,2,3,4,7,8]$ a vzniknutý graf s 8 vrcholmi a stupňom najviac 4.
+ \end{myfig}
+  \noindent
+  Vo výslednom grafe odstránime slučky a zrušíme násobné hrany a dostaneme graf $G$, ktorý má $n$ vrcholov a maximálny 
+  stupeň $2d$. Predpokladajme, že pôvodná vrtuľa bola dobrá; zoberme si ľubovoľnú
+  množinu vrcholov $S$ v grafe $G$ a nech $|S|=t$. Zodpovedajúce vrcholy v partícii $A$ sa zobrazia
+  na aspoň $\frac{3}{2}t$ vrcholov v partícii $B$
+  
+\end{dokaz}
+
+
+\nocite{L94}
+
+%TODO: bin packing, facility location, ... -- ani nie, potrebuju elipsoidovu metodu
+}
+
+\subsection*{Iterované zaokrúhľovanie}
+
+\noindent
+V prípade \minvcover sme vyriešili relaxovaný program a podarilo sa nám ukázať, že v bázovom riešení
+relaxovaného programu má každá premenná nejakú dobrú vlastnosť (konkrétne, že $x_i\in\{0,\frac{1}{2},1\}$),
+na základe ktorej sme mohli odhadnúť zaokrúhľovaciu chybu. Teraz si ukážeme, čo sa dá robiť, ak dobrú
+vlastnosť vieme ukázať iba o niektorých hodnotách relaxovaného riešenia. Pri použití techniky iterovaného 
+zaokrúhľovania 
+vyriešime relaxovaný lineárny program, potenciálne vyberieme niekoľko premenných, ktorých hodnoty zafixujeme 
+a zo zvyšku vyrobíme menší lineárny program, na ktorom celý postup opakujeme. 
+
+\noindent
+Ukážeme si túto techniku na príklade.
+Predstavme si typografickú firmu, ktorá má k dispozícii rôzne tlačiarne s rôznymi technológiami.
+Firma dostane zakázku, ktorá pozostáva z niekoľkých úloh. Každá úloha sa potenciálne dá vytlačiť na 
+rôznych tlačiarňach, s rôznym časom spracovania a nákladmi (napríklad čiernobiely text sa dá tlačiť na 
+offsetovej tlačiarni, alebo laserovej tlačiarni, alebo aj na farebnom plotri -- tam to bude ale dlho trvať
+a bude to drahé). Zakázka má na spracovanie časový limit a cieľom je naplánovať úlohy na tlačiarne tak, aby sa
+stihol termín a zároveň náklady boli čo najmenšie. To nás vedie k nasledujúcej formulácii:
+
+\vbox{
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:mingap}
+    Majme množinu procesorov $M$ a množinu úloh $J$, kde $|M|=m$ a $|J|=n$. Pre každú dvojicu $i\in M$, $j\in J$ máme 
+    daný čas $t_{ij}\ge 0$ a cenu $c_{ij}\ge 0$ spracovania úlohy $j$ na procesore $i$. 
+    Zároveň je dané číslo $T$. Cieľom problému \mingap je priradiť
+    každej úlohe $j\in J$ procesor $u_j\in M$ tak, aby sa minimalizovala celková cena priradenia, t.j.
+    $\sum_{j\in J}c_{u_jj}$. Zároveň sa každý procesor musí zmestiť do časového limitu $T$, t.j.
+    pre každé $i\in M$ platí \hbox{$\sum_{j:u_j=i} t_{ij}\le T$.}
+  \end{dfn}
+\end{framed}
+}
+
+\noindent
+Prirodzená vizualizácia je pomocou bipartitného grafu $G=(V,E)$  s bipartíciou $V=M\uplus J$, pričom 
+pre dvojicu $i\in M$, $j\in J$ je $(i,j)\in E$, ak $t_{ij}\le T$.
+
+\begin{myfig}{0.65\textwidth}{svg/assignment}
+Optimálne priradenie s cenou $12$ pre limit $T=10$.
+Prvé číslo na hrane udáva cenu, druhé čas.
+\end{myfig}
+
+\noindent
+Problém \mingap je algoritmicky ťažko riešiteľný. Aj keď uvažujeme veľmi špeciálny prípad dvoch procesorov
+s tým, že pre každú úlohu $p_{1j}=p_{2j}=p_j$ (t.j. časy spracovania sú na obidvoch procesoroch rovnaké)
+a $\sum_{j\in J}p_j=2T$, rozhodnúť, či sa dajú úlohy podeliť tak, aby na každom procesore bol čas najviac $T$
+je ekvivalentné známemu \NP-úplnému problému \probname{Min-Partition}\footnote{
+  Problém \probname{Min-Partition} je definovaný nasledovne: pre množinu čísel $A=\{a_1,\ldots,a_n\}$
+  treba rozhodnúť, či existuje partícia $A=B\uplus C$ taká, že $\sum_{x\in A}x=\sum_{x\in B}x$.
+}.
+Neočakávame preto, že by sme ho vedeli efektívne riešiť. Ukážeme riešenie trochu jednoduchšej úlohy.
+Povedzme, že naša typografická firma pri prevzatí zakázky sľúbila dodaciu dobu ''{\em 5 až 10 dní}''.
+Budeme sa snažiť riešiť úlohu s termínom $T=5$ dní, ale ak ho trochu zmeškáme, nič zlé sa nestane, kým
+to nebude viac ako 10 dní. Algoritmus, ktorý ukážeme, bude myslený na práve takúto situáciu.
+Bude riešiť problém \mingap s tým, že nájde
+priradenie s optimálnou cenou. Čas môže byť aj väčší ako $T$, ale nikdy neprekročí $2T$
+(tu si treba povšimnúť, že to nie je to isté, ako riešiť priamo problém s limitom $2T$, lebo ten môže
+mať menšiu optimálnu cenu).
+
+\noindent
+Problém \mingap si najprv formulujeme ako celočíselný lineárny program. Pre každú dvojicu
+$i\in M$, $j\in J$ takú, že $(i,j)\in E$ si zavedieme premennú $x_{ij}\in\{0,1\}$, ktorá vyjadruje,
+či procesor $i$ má pridelenú úlohu $j$. Definícia~\ref{dfn:mingap} nám priamočiaro dáva ILP:
+
+
+\begin{equation}
+\label{eq:mingap:ilp}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{ \sum\limits_{(i,j)\in E}x_{ij}c_{ij}}\\[3ex]
+  {\rm pri\ obmedzeniach} & \sum\limits_{i\in M} x_{ij}& = &1 & \;\;\; \forall j\in J\\[3ex]
+                          & \sum\limits_{j\in J} t_{ij}x_{ij}&\le & T & \;\;\; \forall i\in M\\[3ex]
+                          & \multicolumn{3}{c}{ x_{ij}\in\{0,1\}} & \;\;\; \forall i\in M, \; \forall j\in J
+                        %  & x_{ij} & \ge & 0 & \;\;\; \forall i\in M, \; \forall j\in J
+\end{array}
+\end{equation}
+
+\noindent
+Relaxácia programu (\ref{eq:mingap:ilp}) sa dá rozumieť tak, že úlohu nemusíme celú priradiť jednému procesoru,
+ale rôzne časti môžme dať rôznym procesorom.
+Keď  skúsime takto vyriešiť inštanciu z príkladu vyššie, na chvíľu by mohla skrsnúť nádej,
+pretože optimálne riešenie je celočíselné. Stačí však, aby sme namiesto $T=10$ zobrali $T=7$ a optimálne 
+priradenie bude $J_1\mapsto M_1$, $J_2\mapsto M_3$, $J_3\mapsto M_4$ a $J_4\mapsto M_2$ s cenou $21$,
+pričom existuje relaxované riešenie
+
+\begin{align*}
+  x_{11} &=\frac{3}{7} &
+  x_{22} &=\frac{49}{72} &
+  x_{24} &=\frac{1}{8} & 
+  x_{32} &=\frac{23}{72} &
+  x_{34} &=0 &
+  x_{41} &=\frac{4}{7} &
+  x_{42} &=0 &
+  x_{43} &=1 &
+  x_{54} &=\frac{7}{8}
+\end{align*}
+
+\noindent
+\begin{minipage}[t]{0.5\textwidth}
+  \vskip 0pt
+\noindent
+s cenou $\frac{7019}{504}\approx 13.9$. Vidno aj, v čom je problém: napríklad $M_5$ je cenovo výhodná, ale
+pomalá. V celočíselnom riešení ju nemôžeme použiť, ale v relaxovanom jej môžme prideliť takú porciu úlohy $J_4$,
+aby sa presne vyplnil limit. Napriek tomu vidíme, že aj v tomto relaxovanom riešení sú niektoré hodnoty celočíselné
+a na tom by sme chceli založiť našu stratégiu: zafixovať celočíselné hodnoty a zvyšok riešiť nejakým 
+iným lineárnym programom. Zaujíma nás preto, či môže existovať inštancia, ktorá nemá v optimálnom relaxovanom
+riešení žiadne celočíselné hodnoty.
+Obrázok vpravo ukazuje, že môže. Zdá sa, že náš pôvodný plán využiť celočíselné hodnoty z relaxovaného riešenia
+sa dostal do slepej uličky. Ako sa však ukáže, optimálne riešenia, ktoré nemajú 
+\end{minipage}\begin{minipage}[t]{0.5\textwidth}
+  \begin{myfiglabel}{0.7\textwidth}{svg/assignment2}{fig:mingap:ex}
+    Optimálne priradenie pre limit $T=10$ je $M_2$ s cenou 9. 
+    Optimum relaxovaného riešenia je $x_{11}=x_{21}=x_{31}=\frac{1}{3}$,
+  s cenou 5.
+  \end{myfiglabel}
+\end{minipage}
+\noindent
+žiadne celočíselné hodnoty majú veľmi špeciálny tvar, a tak sa nám predsalen podarí situáciu zachrániť.
+Pri návrhu iteratívneho algoritmu by sa neskôr ukázalo, že potrebujeme riešiť jemne všeobecnejšiu verziu 
+relaxovaného programu. Ušetríme si preto robotu a uvedieme ju hneď od začiatku. Namiesto všetkých procesorov
+budeme vyžadovať splnenie termínu iba od nejakej podmnožiny $M'\subseteq M$; navyše, každý procesor bude mať 
+potenciálne iný termín. Dostávame teda program
+
+\begin{equation}
+\label{eq:mingap:lp}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{ \sum\limits_{(i,j)\in E}x_{ij}c_{ij}}\\[4mm]
+  {\rm pri\ obmedzeniach} & \sum\limits_{i\in M} x_{ij}& = &1 & \;\;\; \forall j\in J\\[4mm]
+                          & \sum\limits_{j\in J} t_{ij}x_{ij}&\le & T_i & \;\;\; \forall i\in M'\\[4mm]
+                        %  & \multicolumn{3}{c}{ x_{ij}\in\{0,1\}} & \;\;\; \forall i\in M, \; \forall j\in J
+                          & x_{ij} & \ge & 0 & \;\;\; \forall i\in M, \; \forall j\in J
+\end{array}
+\end{equation}
+
+\vskip 1ex
+\noindent
+Relaxácia programu (\ref{eq:mingap:ilp}) je špeciálnym prípadom (\ref{eq:mingap:lp}) pre $M'=M$ a $T_i=T$.
+V ďalšom texte budeme symbolom $deg(k)$, pre $k\in J\cup M$  označovať stupeň procesora alebo úlohy
+v grafe $G$ (t.j. počet hrán, ktoré z neho vychádzajú).
+Pre celý algoritmus je kľúčová nasledovná charakterizácia optimálnych riešení:
+
+\begin{lema}
+  \label{lm:mingap:char}
+  Nech \bm{x} je optimálne bázové riešenie programu (\ref{eq:mingap:lp}), kde pre všetky $i$, $j$ je
+  $0<x_{ij}<1$. Potom existuje procesor $i\in M'$, pre ktorý buď $deg(i)\le 1$, alebo $deg(i)=2$ a 
+  $\sum_{j\in J}x_{ij}\ge1$.
+\end{lema}
+
+\noindent
+Lema~\ref{lm:mingap:char} hovorí, že ak sa po vyriešení programu (\ref{eq:mingap:lp}) ocitneme v situácii,
+kde nie je žiadna celočíselná premenná, tak buď máme procesor, ktorý dokáže spracovávať
+najviac jednu úlohu ($d(i)\le1$), alebo procesor, ktorý dokáže spracovávať práve dve úlohy a z každej z nich
+spracováva kus (navyše, v súčte sú tie kusy $\ge1$).
+Pri dôkaze lemy~\ref{lm:mingap:char} využijeme nasledujúce pomocné tvrdenie:
+
+\begin{lema}
+  \label{lm:mingap:tmp1}
+  Nech \bm{x} je bázové riešenie programu (\ref{eq:mingap:lp}), v ktorom všetky $x_{ij}>0$. 
+  Potom existuje množina
+  $M''\subseteq M'$ veľkosti $|M''|=|E|-|J|$ taká, že pre všetky $i\in M''$ platí 
+  $\sum\limits_{j\in J}t_{ij}x_{ij}=T_i$.
+\end{lema}
+
+
+\begin{dokaz}
+  Pripomeňme si definíciu bázového riešenia (Definícia~\ref{dfn:LP:basis}). Najprv požadujeme program v normálnom 
+  tvare $\max\limits_{\bm{x}}\{\bm{c}\tr\bm{x}\mid A\bm{x}=\bm{b},\;\bm{x}\ge0\}$, kde $A$ má plnú hodnosť
+  (t.j. neobsahuje lineárne závislé riadky). Program (\ref{eq:mingap:lp}) upravíme tak, že zmeníme minimalizáciu
+  na maximalizáciu a pre každé obmedzenie $\sum_{j\in J}t_{ij}x_{ij}\le T_i$ zavedieme rezervnú premennú
+  $s_i$ a dostaneme \hbox{$\sum_{j\in J}t_{ij}x_{ij}+s_i= T_i$.} Získame tak maticu obmedzení 
+  rozmerov $(n+m')\times (|E|+m')$
+  v tvare
+$$A=\left(\begin{array}{c|c}B&0\\\hline C&I\end{array}\right)$$
+  kde $B\in\R^{n\times |E|}$ je matica obmedzení pre úlohy, $C\in\R^{m'\times|E|}$ je matica obmedzení pre procesory
+  a $I$ je identická matica $m'\times m'$ zahŕňajúca rezervné premenné $s_i$.
+  Čitateľ sa ľahko presvedčí, že riadky matice $A$ sú lineárne nezávislé
+  (každý riadok v hornej časti obsahuje iné premenné).
+
+  \centerline{\begin{minipage}[t]{0.9\textwidth}\vskip 0pt
+      \mycaption{Napríklad pre zadanie (\ref{fig:mingap:ex}) dostávame program
+        $$\max_{\bm{x}\in\R^6}\{\bm{c}\tr\bm{x}\mid A\bm{x}=\bm{b},\;\bm{x}\ge0\} $$
+        kde
+        \begin{align*}
+          \bm{c}&=\cvect{-3\\-9\\-3\\0\\0\\0}&
+          \bm{x}&=\cvect{x_{11}\\x_{21}\\x_{31}\\s_1\\s_2\\s_3}&
+        A&=\left(\begin{array}{ccc|ccc}1&1&1&0&0&0\\\hline30&0 &0 &1&0&0\\0&10&0 &0 &1&0\\0&0&30&0&0&1 \end{array}\right)&
+          \bm{b}&=\cvect{1\\T\\T\\T}
+        \end{align*}
+      }
+  \end{minipage}}
+
+  \noindent
+  Podľa Definície~\ref{dfn:LP:basis}, báza má veľkosť $n+m'$ a všetky nebázové zložky musia byť nulové. Pretože
+  predpokladáme, že všetky $x_{ij}>0$, v bázovom riešení musí byť $|E|+m'-(n+m')=|E|-n$ nulových hodnôt $s_i$.
+  Každá nulová rezervná premenná $s_i$ dáva jeden procesor, pre ktorý platí $\sum_{j\in J}t_{ij}x_{ij}+s_i= T_i$.
+\end{dokaz}
+
+
+\begin{dokazpar}{Lemy~\ref{lm:mingap:char}}
+  Majme bázové riešenie programu (\ref{eq:mingap:lp}), kde pre všetky $i,j$ je $0<x_{ij}<1$ a navyše pre
+  všetky $i\in M'$ je $deg(i)\ge2$. 
+  Pre každú úlohu $j\in J$ musí platiť 
+  $deg(j)\ge2$: pretože  $\sum_{i\in M}x_{ij}=1$, keby $deg(j)=1$, musela by nejaká hodnota $x_{ij}=1$.
+  Zoberme si množinu $M''$ z Lemy~\ref{lm:mingap:tmp1}. Platí
+  $$|J|+|M''|=|E|=\frac{\sum\limits_{j\in J}deg(j) + \sum\limits_{i\in M}deg(i)}{2}
+  \ge\frac{\sum\limits_{j\in J}deg(j) + \sum\limits_{i\in M'}deg(i)}{2}
+  \stackrel{(\clubsuit)}{\ge}|J|+|M'|\ge |J| + |M''|
+  $$
+
+  \noindent
+  Nerovnosť $(\clubsuit)$ platí preto, lebo pre $i\in M'$ je $deg(i)\ge 2$ z 
+  predpokladu a $deg(j)\ge 2$ sme ukázali pred chvíľou pre všetky $j\in J$.
+  Pretože prvý a posledný člen v sérii nerovností sa rovnajú, musia platiť rovnosti všade. 
+  Pretože $M''\subseteq M'$, platí $M'=M''$. Zároveň, pretože všetky vrcholy z $J$ a $M'$ sú stupňa aspoň 2, 
+  je $deg(j)=2$ pre všetky $j\in J$ a  $deg(i)=2$ pre všetky $i\in M'$
+  jediná možnosť, ako uchovať v platnosti rovnosť v $(\clubsuit)$.
+  Aby mohla platiť aj predchádzajúca rovnosť, musí byť
+  $deg(i)=0$ pre všetky $i\in M\setminus M'$.
+
+  \noindent
+  Z toho ale vyplýva, že $G$ sa skladá z izolovaných vrcholov a vrcholov stupňa 2, čiže je tvorený
+  dizjunktnými cyklami. Keďže $G$ je bipartitný, každý cyklus $C$ má párnu dĺžku, a preto obsahuje rovnaký počet
+  $k$
+  procesorov aj úloh. Keďže pre každú úlohu $j$ je $\sum_{i\in M'}x_{ij}=1$, je $\sum_{(i,j)\in C}x_{ij}=k$
+  a nutne musí v $C$ existovať procesor $i$, pre ktorý je $\sum_{j\in J}x_{ij}\ge1$.
+\end{dokazpar}
+
+\noindent
+S charakterizáciou bázových riešení pomocou Lemy~\ref{lm:mingap:char} sa nám začína črtať algoritmus riešenia.
+Keď v riešení programu (\ref{eq:mingap:lp}) je nejaká premenná $x_{ij}=1$, priradíme úlohu $j$ procesoru $i$;
+úloha $j$ tým bude vybavená a procesoru $i$ sa zmenší jeho termín $T_i$ (preto sme v programe (\ref{eq:mingap:lp})
+chceli mať rôzne limity pre rôzne procesory). Ak je nejaká premenná $x_{ij}=0$, vyhodíme z grafu príslušnú
+hranu, čím dostaneme menší graf (a teda menší problém). Ak je nejaký procesor $i\in M'$, pre ktorý $deg(i)=1$,
+nemusíme pri ňom uvažovať žiaden termín: keďže je iba jedna úloha, ktorá mu potenciálne môže byť priradená
+(a na začiatku sme bez ujmy na všeobecnosti predpokladali, že každá hrana má čas nanajvýš $T$), $i$ nikdy neprekročí 
+termín. Posledná vec, čo sa môže po vyriešení programu (\ref{eq:mingap:lp}) stať, je že máme v $M'$ procesor $i$,
+ktorý má stupeň 2 a $\sum_{j\in J}x_{ij}\ge1$. V tomto prípade tiež nemusíme uvažovať žiaden termín:
+$i$ má stupeň 2, takže najväčšia možná hodnota $\sum_{j\in J}x_{ij}\le2$. Keďže v našom riešení je 
+$\sum_{j\in J}x_{ij}\ge1$ a termín je stále splnený, aj bez akýchkoľvek obmedzení  termín nemôže byť prekročený 
+viac ako o dvojnásobok. V oboch prípadoch teda dostaneme problém, ktorý je menší v tom, že sa zmenšila
+množina $M'$. Poďme teraz túto tému rozviesť detailnejšie.
+Algoritmus na riešenie problému \mingap bude vyzerať nasledovne
+\newpage
+
+\hrule
+\begin{itemize}
+  \item[1] $M':=M$, $\forall i:\;T_i:=T$, $F:=\emptyset$ 
+    ($F$ je množina priradených hrán)
+  \item[2] kým $J\not=\emptyset$
+    \begin{itemize}
+      \item[3\phantom{a}] nech \bm{x} je optimálne riešenie  programu (\ref{eq:mingap:lp}),\\
+        vykonaj jednu z nasledovných možností:
+      \item[4a] ak existuje $x_{ij}=0$,\\ vyhoď hranu $(i,j)$ z $G$
+      \item[4b] ak existuje $x_{ij}=1$,\\
+        $F:=F\cup\{(i,j)\}$, $J:=J\setminus\{j\}$, $T_i:=T_i-t_{ij}$
+        \item[4c] inak nech $i\in M'$ také, že $deg(i)\le1$ alebo $deg(i)=2$ a $\sum_{j\in J}x_{ij}\ge1$\\
+        $M':=M'\setminus\{i\}$
+    \end{itemize}
+\end{itemize}
+\hrule
+\vskip 3ex
+
+\noindent
+Každá iterácia cyklu na riadku 2 zmenší hodnotu $|E|+|J|+|M'|$, preto algoritmus po polynomiálnom počte
+iterácií skončí. Ľahko vidno, že po skončení je každá úloha priradená nejakému procesoru. Ostáva nám ukázať,
+že toto priradenie má optimálnu cenu a termín je prekročený najviac o dvojnásobok:
+
+\begin{veta}
+Uvedený algoritmus vyrieši v polynomiálnom čase problém \mingap. Nájdené riešenie má optimálnu cenu
+a každý procesor skončí najneskôr v čase $2T$.
+\end{veta}
+
+\begin{dokaz}
+  Už sme nahliadli, že algoritmus v polynomiálnom čase vráti nejaké riešenie. Teraz ukážeme, že toto riešenie
+  má optimálnu cenu. Nech $c$ je cena optimálneho riešenia programu (\ref{eq:mingap:lp}) pre $M'=M$ a
+  $T_i=T$. Zjavne $c\le OPT$.   
+  Indukciou ukážeme, že v každej iterácii cena už priradených úloh $F$, spolu s 
+  cenou riešenia aktuálneho programu (\ref{eq:mingap:lp}) z riadku 3 je dokopy nanajvýš $c$.
+  V prvej iterácii tvrdenie platí triviálne. Ak sa vykoná riadok 4a, nezmení sa ani cena $F$, ani cena
+  optima (\ref{eq:mingap:lp}). Ak sa vykoná riadok 4b, cena $F$ stúpne o $c_{ij}$ a cena optima 
+  (\ref{eq:mingap:lp}) klesne aspoň
+  o $c_{ij}x_{ij}=c_{ij}$. Ak sa vykoná riadok 4c, cena $F$ sa nezmení a cena optima
+  (\ref{eq:mingap:lp}) nestúpne.
+
+
+  \noindent
+  Teraz ukážeme, že čas každého procesora je najviac $2T$.
+  Označme $F_{i,\ell}$ čas, ktorý na procesore $i$ indukujú úlohy priradené do $F$ počas prvých
+  $\ell-1$ iterácií, a podobne $T_{i,\ell}$ hodnotu $T_i$ na začiatku $\ell$-tej iterácie.
+  Zafixujme si procesor $i$. Počas prvých iterácií, kým $i\in M'$, ostáva v platnosti
+  $T_{i,\ell}+F_{i,\ell}\le T$. Uvažujme iteráciu $\ell$, v ktorej sa procesor $i$ vyhodí z $M'$ v riadku 4c.
+  To sa môže stať dvoma spôsobmi:
+
+  \noindent
+  {\bfseries 1. $deg(i)\le1$}. Nech $j$ je jediná úloha, ktorá je spojená\footnote{Podľa správnosti by sme
+    mali aj graf $G$ indexovať číslom iterácie $\ell$, lebo sa $G$ sa v priebehu výpočtu mení. Spoľahneme sa
+  ale na to, že z kontextu je zjavné, o ktorý graf $G$ sa jedná.} v $\ell$-tej iterácii
+  s $i$.
+  Koľko času spotrebuje $i$ vo finálnom riešení? Čas, ktorý už má priradený, t.j. $T_{i,\ell}$, plus možno
+  $t_{ij}$, ak sa mu $j$-ta úloha priradí. Viac spotrebovať nemôže, lebo žiadna iná úloha s ním už nie je spojená.
+  Preto výsledný čas je nanajvýš $F_{i,\ell}+t_{ij}\le T_{i,\ell}+F_{i,\ell}+t_{ij}\le 2T$; posledná nerovnosť
+  vyplýva z toho, že pre všetky hrany je $t_{ij}\le T$ a až po $\ell$-tú iteráciu bol $i\in M'$, takže
+  $T_{i,\ell}+F_{i,\ell}\le T$.
+
+  \noindent
+  {\bfseries 2. $deg(i)=2$ a $\sum_{j\in J}x_{ij}\ge1$} Nech $j_1$, $j_2$ sú jediné dve úlohy, ktoré
+  sú spojené s $i$. Opäť sa pýtame, koľko času môže spotrebovať $i$ vo výslednom riešení. Zjavne
+  najviac $F_{i,\ell}+t_{ij_1}+t_{ij_2}$. Na začiatku $\ell$-tej iterácie platilo 
+  $F_{i,\ell}+T_{i,\ell}\le T$. Pri riešení programu (\ref{eq:mingap:lp}) v $\ell$-tej iterácii
+  je $T_{i,\ell}$ limit pre procesor $i$, preto ak \bm{x} je riešenie z riadku 3, platí
+  $t_{ij_1}x_{ij_1}+t_{ij_2}x_{ij_2}\le T_{i,\ell}$.
+  Preto platí $F_{i,\ell}\le T-t_{ij_1}x_{ij_1}+t_{ij_2}x_{ij_2}$ a odtiaľ dostaneme,
+  že $i$ určite nespotrebuje viac času ako 
+  
+  \begin{eqnarray*}
+    T-t_{ij_1}x_{ij_1}+t_{ij_2}x_{ij_2}+t_{ij_1}+t_{ij_2} &\le \\
+    T + (1-x_{ij_1})t_{ij_1} + (1-x_{ij_2})t_{ij_2} &\le \\
+    T + (1-x_{ij_1})T + (1-x_{ij_2})T &\le \\
+    T (3-x_{ij_1}-x_{ij_2})&\le& 2T
+  \end{eqnarray*}
+  
+  \noindent
+  pričom posledná nerovnosť vyplýva z predpokladu, že $\sum_{j\in J}x_{ij}\ge1$.
+
+\end{dokaz}

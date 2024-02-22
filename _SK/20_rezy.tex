@@ -1,0 +1,484 @@
+V doterajšom texte sme si predstavili rôzne spôsoby, ako využiť optimalizačné metódy pri návrhu aproximačných
+algoritmov. V nasledujúcch dvoch kapitolách si priblížime niektoré známe problémy a \ldots
+
+
+Problém nájdenia minimálneho rezu v grafe, \mincut, by mal byť čitateľom dobre známy:
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:mincut}
+    Majme daný jednoduchý graf $G=(V,E)$ s hranami ohodnotenými nezápornými váhami, t.j. funkciou
+    $\omega:E\mapsto \R^+$ a v ňom dvojicu vrcholov $s,t$. Cieľom problému
+    \mincut je odobrať z grafu $G$ množinu hrán s minimálnou celkovou váhou tak, aby
+     vrcholy $s$ a $t$ neboli v rovnakom komponente súvislosti výsledného grafu.
+  \end{dfn}
+\end{framed}
+
+Zaujímavá je spojitosť \mincut a \maxflow: známa veta hovorí, že veľkosti minimálneho rezu a maximálneho toku 
+sú rovnaké. 
+
+
+\begin{myfig}{\textwidth}{svg/flowcutNew}
+  \centerline{Minimálny rez a maximálny tok sú rovnaké.}
+\end{myfig}
+
+Videli sme, že \maxflow sa dá vyjadriť ako lineárny program, ktorého duálny program
+je relaxácia problému \mincut (v ktorej nevyberáme množinu hrán, ale každej hrane priradíme hodnotu
+z intervalu $[0,1]$ a požadujeme, aby na každej $s-t$ ceste bol súčet hodnôt aspoň 1).
+Zároveň, pretože matica obmedzení tohto relaxovaného programu je totálne unimodulárna, vieme,
+že existuje celočíselné optimum. Efektívnu riešiteľnosť \mincut môžeme teda pripísať na vrub
+špeciálnemu tvaru matice príslušného lineárneho programu. Dalo by sa očakávať, 
+že programy takéhoto tvaru sú skôr výnimkou a pre väčšinu problémov podobná min-max charakterizácia
+neplatí. V tomto texte chceme ilustrovať, že efektívne riešiteľné 
+diskrétne optimalizačné problémy sú skôr výnimka ako pravidlo.
+Prezentujeme niekoľko zovšeobecnení \mincut, ktoré sú \NP-ťažké
+a ukážeme aproximačné algoritmy na ich riešenie.
+Jedno zovšeobecnenie, v ktorom namiesto jednej dvojice vrcholov treba rozpojiť $k$ dvojíc, sme už videli:
+
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:multicut}
+    Majme daný jednoduchý graf $G=(V,E)$ s hranami ohodnotenými nezápornými váhami, t.j. funkciou
+    $\omega:E\mapsto \R^+$ a v ňom $k$ dvojíc vrcholov $(s_i,t_i)$, $i=1,\ldots,k$. Cieľom problému
+    \minmulticut je odobrať z grafu $G$ množinu hrán s minimálnou celkovou váhou tak, aby
+    žiadna dvojica $(s_i,t_i)$ nebola v rovnakom komponente súvislosti výsledného grafu.
+  \end{dfn}
+\end{framed}
+
+a ukázali sme $4\ln(2k)$-aproximačný algoritmus. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Variácia prvá: \multiwaycut}
+
+Iné zovšeobecnenie nepožaduje rozpojiť konkrétne dvojice vrcholov, ale iba rozdeliť 
+niekoľko daných význačných vrcholov (terminálov) do rôznych komponentov súvislosti:
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:multiwaycut}
+    Majme daný jednoduchý graf $G=(V,E)$ s hranami ohodnotenými nezápornými váhami, t.j. funkciou
+    $\omega:E\mapsto \R^+$ a v ňom $k$  vrcholov $s_1,\ldots,s_k$. Cieľom problému
+    \multiwaycut je odobrať z grafu $G$ množinu hrán s minimálnou celkovou váhou tak, aby
+    žiadne dva vrcholy $s_i$, $s_j$  neboli v rovnakom komponente súvislosti výsledného grafu.
+  \end{dfn}
+\end{framed}
+
+Bez ujmy na všeobecnosti môžeme predpokladať, že vstupný graf je súvislý (inak každý komponent
+súvislosti môžme vyriešiť ako samostatnú inštanciu), a preto optimálne riešenie bude mať
+práve $k$ komponentov (menej nemôže mať, lebo to by museli dva terminály byť v jednom komponente,
+a viac nebude mať kvôli minimalite). 
+
+\begin{myfig}{.6\textwidth}{svg/multiway1}
+    Optimálne riešenie s cenou $43$. Platí
+    $\partial(C_1)=21$,
+    $\partial(C_2)=22$,
+    $\partial(C_3)=1$,
+    $\partial(C_4)=21$,
+    $\partial(C_5)=1$,
+  $\partial(C_6)=20$.
+\end{myfig}
+
+
+Označme $C_i$ komponent súvislosti optimálneho riešenia, ktorý obsahuje terminál $s_i$; nech
+$\partial(C_i)$ je veľkosť rezu, ktorý oddeľuje komponent $C_i$, t.j.
+\begin{equation}
+  \label{eqn:cutedgeboundary}
+  \partial(C_i):=\sum_{e=(u,v)\atop u\in C_i, v\not\in C_i} \omega(e).
+\end{equation}
+
+Cena optimálneho riešenia je potom 
+\begin{equation}
+  \label{eqn:multiwaycut:1}
+  OPT=\frac{1}{2}\sum_{i=1}^k\partial(C_i),
+\end{equation}
+
+lebo každá hrana rezu je v sume na pravej strane zarátaná dvakrát.
+Ukážeme si $2(1-\frac{1}{k})$-aproximačný algoritmus, t.j. algoritmus, ktorý vždy
+nájde rez s hodnotou najviac $2(1-\frac{1}{k})$-násobku optima. 
+
+Zoberme si ľubovoľný terminál $s_i$. 
+Označme $D_i$ minimálny rez, ktorý oddeľuje $s_i$ 
+od ostatných terminálov a označme $\partial(D_i)$ jeho veľkosť. 
+Rez $D_i$ vieme pre každé $i$ vypočítať ľahko: všetky ostatné terminály zlúčime do jedného
+vrchola a v takto získanom grafe zrátame minimálny rez.
+
+\begin{minipage}[t]{0.45\textwidth}
+  \vskip 0pt
+\begin{myfig}{\textwidth}{svg/multiway2}
+  \centerline{Rez $D_2$ má veľkosť 22.}
+\end{myfig}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.45\textwidth}
+  \vskip 0pt
+\begin{myfig}{\textwidth}{svg/multiway3}
+  Veľkosti rezov sú 
+    $\partial(D_1)=20$,
+    $\partial(D_2)=22$,
+    $\partial(D_3)=1$,
+    $\partial(D_4)=19$,
+    $\partial(D_5)=1$,
+    $\partial(D_6)=19$. Cena riešenia je $80$.
+\end{myfig}
+\end{minipage}
+
+Čo sa stane, ak  za riešenie zoberieme zjednotenie rezov $D_1\cup D_2\cup\cdots\cup D_k$?
+Každý rez $C_i$ z optimálneho riešenia oddeľuje $s_i$ od zvyšných terminálov. Keďže $D_i$ je minimálny
+taký rez, je $\partial(D_i)\le\partial(C_i)$.
+Zároveň pre cenu riešenia $m$ platí 
+$$m\le\sum_{i=1}^k\partial(D_i)\le\sum_{i=1}^k\partial(C_i)=2\cdot OPT,$$
+kde posledná rovnosť je (\ref{eqn:multiwaycut:1}), a preto máme 2-aproximačný algoritmus. Zároveň hneď vidíme,
+ako ho trochu vylepšiť: prípustné riešenie dostaneme, ak urobíme zjednotenie hociktorých $k-1$ rezov  $D_i$ namiesto
+všetkých $k$. Prirodzenou voľbou je vynechať ten najťažší; nech je to $D_j$. Keďže je najťažší, z Dirichletovho
+princípu vyplýva, že musí byť aspoň tak ťažký ako priemer, t.j.
+$$\partial(D_j)\ge\frac{1}{k}\sum_{i=1}^k\partial(D_i).$$
+Pre cenu riešenia výsledného algoritmu potom dostávame
+$$ALG\le\sum_{i=1\atop i\not=j}^k\partial(D_i)=\sum_{i=1}^k\partial(D_i)-\partial(D_j)\le
+\left(1-\frac{1}{k}\right)\sum_{i=1}^k\partial(D_i)\le
+\left(1-\frac{1}{k}\right)\sum_{i=1}^k\partial(C_i)=2\left(1-\frac{1}{k}\right) OPT.$$
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Variácia druhá: \kcut}
+
+Poslednou variáciou v tomto texte je modifikácia problému \multiwaycut, pri ktorej nemáme žiadne terminály 
+a chceme iba graf rozdeliť na (aspoň) $k$ častí:
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:kcut}
+    Majme daný jednoduchý graf $G=(V,E)$ s hranami ohodnotenými nezápornými váhami, t.j. funkciou
+    $\omega:E\mapsto \R^+$ a číslo $k$.
+     Cieľom problému
+    \kcut je odobrať z grafu $G$ množinu hrán s minimálnou celkovou váhou tak, aby
+    výsledný graf mal aspoň $k$ komponentov súvislosti.
+  \end{dfn}
+\end{framed}
+
+Podotýkame, že $k$ v názve problému je len symbol; počet častí, na ktoré treba rozkrájať graf, je súčasťou vstupu.
+Opäť ide o \NP-ťažký problém a ukážeme si algoritmus s rovnakou garanciou aproximácie ako v predchádzajúcom prípade, 
+t.j. $2\left(1-\frac{1}{k}\right)$. Predstavíme pri tom aj dátovú štruktúru, ktorá môže byť zaujímavá sama osebe.
+
+\subsection*{Gomory-Hu stromy}
+
+Predstavme si situáciu, že máme graf $G=(V,E)$ 
+s hranami ohodnotenými nezápornými váhami  
+a chceme pre každú dvojicu vrcholov $u,v$ zrátať cenu minimálneho $u-v$ rezu.
+Priamočiary prístup je $\Omega(n^2)$-krát zavolať procedúru na výpočet minimálneho rezu.
+Dá sa to ale aj lepšie: v skutočnosti nám stačí $O(n)$ počítaní minimálneho rezu. Kľúčom je
+dátová štruktúra, ktorá efektívne kóduje minimálne rezy medzi všetkými dvojicami vrcholov, tzv.
+Gomory-Hu strom. 
+
+\vskip 1ex
+
+V ďalšom budeme používať nasledovné označenie: 
+
+\begin{itemize}
+  \item Pre dva vrcholy $u,v\in V$, $f_G(u,v)$ (alebo
+len $f(u,v)$ ak je $G$ zrejmé z kontextu), bude veľkosť minimálneho $u-v$ rezu v $G$. 
+\item Ďalej,
+nech $T=(V,E)$ je strom a $e\in E$ je hrana. Po jej odstránení dostaneme graf $T-\{e\}$, ktorý
+má dva komponenty súvislosti. Označme $cut_T(e)\subseteq V$  
+jeden\footnote{Aby sme mali jednoznačnú definíciu, potrebujeme povedať, ktorý komponent vyberieme.
+  Keďže ale budeme hovoriť o veľkosti rezu medzi komponentami, 
+  je nám to jedno. Napríklad nech $cut_T(e)$ je menší z komponentov $T-\{e\}$
+  a v prípade rovnosti $cut_T(e)$ je 
+ten komponent $T-\{e\}$, ktorý obsahuje nejaký pevne zvolený fixný vrchol $v_0$.}
+z nich. 
+\item Nech $G=(V,E)$ je graf. Tak ako v (\ref{eqn:cutedgeboundary}), 
+  pre množinu $S\subseteq V$ bude $\partial_G(S)$ (resp. $\partial(S)$, ak je $G$ zrejmé)
+veľkosť rezu určeného množinou $S$
+(zjavne $\partial(S)=\partial(V-S)$).
+\end{itemize}
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:GomoryHu}
+    Majme daný jednoduchý graf $G=(V,E)$ s hranami ohodnotenými nezápornými váhami, t.j. funkciou
+    $\omega:E\mapsto \R^+$. {\em Gomory-Hu strom} ku grafu $G$ je strom $T=(V,E')$, s hranami
+    ohodnotenými funkciou  $\omega':E'\mapsto \R^+$, ktorý spĺňa tieto vlastnosti:
+    \begin{enumerate}
+      \item $\forall e'\in E':\;\omega'(e')=\partial_G(cut_T(e'))$
+      \item $\forall u,v\in V:\;f_G(u,v)=f_T(u,v)$
+    \end{enumerate}
+  \end{dfn}
+\end{framed}
+
+Definícia~\ref{dfn:GomoryHu} nehovorí, ako taký strom skonštruovať (ani nehovorí, či je jednoznačný), ale iba
+to, že každý strom s danými vlastnosťami je Gomory-Hu strom. Čo vlastne v Definícii~\ref{dfn:GomoryHu} požadujeme?
+Strom $T$ má rovnakú množinu vrcholov ako $G$, ale hrany môže mať úplne iné (nijak nesúvisia s hranami $G$).
+Prvá vlastnosť hovorí, že ak by sme už poznali hrany $E'$, ich váhy $\omega'$ vyrátame ľahko: pre každú
+hranu $e'$ sa pozrieme, na aké množiny sa rozpadne $T$ po odobratí $e'$, a potom zrátame veľkosť
+rezu v $G$ medzi týmito množinami. Napríklad na nasledujúcom obrázku je $cut_T((j,c))=\{c,d\}$
+a $\partial_G(\{c,d\})=20$ (z množiny $\{c,d\}$ odchádzajú hrany $(b,c)$ a $(e,c)$).
+
+
+\begin{myfig}{\textwidth}{svg/kcut1}
+  \centerline{Graf $G$ a jeho Gomory-Hu strom $T$.}
+\end{myfig}
+
+
+Druhá vlastnosť hovorí, že z $T$ sa dajú vyčítať hodnoty minimálneho rezu medzi ľubovoľnými dvoma vrcholmi:
+$f_G(u,v)$, teda veľkosť minimálneho $u-v$ rezu v $G$, je $f_T(u,v)$: $T$ je strom, takže obsahuje práve jednu
+$u-v$ cestu, a preto $f_T(u,v)$ je minimálna váha $\omega'$ na tejto ceste. Napríklad pre vrcholy $a,k$ na obrázku
+je v $T$ cesta $a-b-j-k$ a $f_T(a,k)=20$. Minimum sa nadobúda na hrane $a-b$ a $cut_T((a,b))=\{a\}$. Vskutku,
+rez $\{a\}$ s $\partial_G(\{a\})=20$ (kvôli hranám $(a,b)$, $(a,j)$) je minimálny $a-k$ rez v $G$.
+
+\vskip 2ex
+
+Poďme teraz ukázať algoritmus, ktorý vyrobí k danému grafu $G$ jeho Gomory-Hu strom. 
+Bude postupovať v iteráciách, pričom v každej iterácii $t$ bude mať
+partíciu vrcholov $V=S^{(t)}_1\cup S^{(t)}_2\cup\cdots\cup S^{(t)}_{n_t}$, 
+pričom $S^{(t)}_i\cap S^{(t)}_j=\emptyset$ 
+pre $i\not=j$. Množiny $S^{(t)}_i$ budeme volať krabice. Na začiatku sú všetky vrcholy v jednej krabici,
+t.j. $n_0=1$, $S^{(0)}_1=V$. 
+Na konci chceme, aby každá krabica obsahovala jeden vrchol; po skončení algoritmu môžeme preto
+jednoprvkové krabice stotožniť s príslušnými vrcholmi.
+
+Na začiatku iterácie $t+1$ sú krabice
+pospájané stromom $T^{(t)}=\left(\left\{S_i^{(t)}\right\}_{i=1}^{n_t},E^{(t)}\right)$ s ohodnotenými hranami. Iterácia $t+1$
+zoberie jednu krabicu $S=S^{(t)}_i$ a zakorení $T^{(t)}$ v $S$. Vyberie z $S$ dva vrcholy $x,y$
+a rozdelí $S$ na dve krabice $S_x$ a $S_y$ spojené hranou, pričom zvolí váhu pre novú hranu a
+vhodne prerozdelí podstromy.
+Cieľom je implementovať rozdeľovanie krabíc a prerozdeľovanie podstromov tak, aby po skončení algoritmu bol strom $T$
+Gomory-Hu strom pre graf $G$.
+
+\begin{myfig}{0.75\textwidth}{svg/kcut2}
+\end{myfig}
+
+Počas behu algoritmu bude platiť nasledovný invariant:
+
+\begin{framed}
+{\bf Invariant:} Nech $e\in E^{(t)}$ je ľubovoľná hrana v strome $T^{(t)}$, $e=\left(S_i^{(t)},S_J^{(t)}\right)$,
+potom $cut_{T^{(t)}}(e)$ je množina krabíc v jednom komponente $T^{(t)}-\{e\}$. Nech $M$
+sú vrcholy grafu $G$ z týchto krabíc, t.j. $M:=\{v\in V\mid \exists S\in cut_{T^{(t)}}(e):\;v\in S\}$.
+Potom existujú dvaja {\em svedkovia} $x\in S_i^{(t)}$, $y\in S_j^{(t)}$, že $\omega'(e)=f_G(x,y)$ a 
+$M$ je minimálny $x-y$ rez v $G$.
+\end{framed}
+
+Inými slovami, keď si zoberieme hocijakú hranu $e$ zo stromu krabíc, vieme jej priradiť rez v grafe $G$: rez je
+definovaný množinou tých vrcholov z $V$, ktoré sú v niektorej krabici z jedného komponentu $T^{(t)}-\{e\}$.
+Tento rez v $G$ musí byť minimálny $x-y$ rez pre svedkov $x,y$, a zároveň cena hrany $e$ v strome $T^{(t)}$
+musí byť cena tohoto rezu.
+
+Teraz potrebujeme urobiť dve veci: jednak ukázať, že keď algoritmus skončí a platí invariant, máme dobrý 
+Gomory-Hu strom a dvak navrhnúť iteráciu algoritmu tak, aby invariant ostával v platnosti.
+
+Najprv si ukážeme, že ak platí invariant a každá krabica je jednoprvková, máme Gomory-Hu strom. 
+Nech $T=(V,E')$ je strom po skončení algoritmu a nech v ňom platí invariant. Keďže každá krabica bola jednoprvková,
+svedkovia z invariantu sú samotné vrcholy.
+Potrebujeme ukázať
+obe vlastnosti z Definície~\ref{dfn:GomoryHu}. Prvá vlastnosť, $\omega'(e)=\partial_G(cut_T(e))$,  hovorí, 
+že váha hrany $e\in E'$ je cena príslušného rezu v $G$. Z invariantu ale platí, že $cut_T(e)$ je minimálny
+$x-y$ rez, kde $e=(x,y)$. Zároveň invariant hovorí, že $\omega'(e)=f_G(x,y)=\partial_G(cut_T(e))$.
+Prvá vlastnosť z Definície~\ref{dfn:GomoryHu} je preto splnená. 
+
+Druhá vlastnosť hovorí, že $f_G(u,v)=f_T(u,v)$
+pre ľubovoľné dva vrcholy $u,v\in V$. Ak $(u,v)\in E'$, vlastnosť vyplýva priamo z invariantu:
+keďže $u,v$ sú spojené hranou v strome $T$, je $f_T(u,v)=\omega'((u,v))=f_G(u,v)$.
+Nech teda $u,v$ nie sú spojené hranou v $T$. Keďže $T$ je strom, je v ňom práve jedna $u-v$ cesta
+$u=w_0,w_1,\ldots,w_z=v$ a minimálny $u-v$ rez v $T$ je hrana s minimálnou váhou na nej.
+Označme túto hranu $e_{\min}=(w_i,w_{i+1})$, t.j. chceme ukázať $f_G(u,v)=\omega'(e_{\min})$.
+
+Na jednej strane, v $T-\{e_{\min}\}$ sú $w_{i}$ a $w_{i+1}$ v rôznych komponentoch, a teda aj $u$ a $v$
+sú v rôznych komponentoch. Preto $cut_T(e_{\min})$ je rez v $G$, ktorý oddelí $u$
+od $v$, a teda $\partial_G(cut_T(e_{\min}))\ge f_G(u,v)$. Z predchádzajúcich úvah ale vieme,
+že $\partial_G(cut_T(e_{\min}))=\omega'(e_{\min})$, a tak sme ukázali, že $\omega'(e_{\min})\ge  f_G(u,v)$.
+
+\begin{myfig}{\textwidth}{svg/kcut3}
+  Vľavo je graf $G=(V,E)$, vpravo jeho Gomory-Hu strom $T$. Medzi vrcholmi $u$, $v$ je v $T$ jediná cesta
+a na nej je hrana $e_{\min}$. Odstránením hrany $e_{\min}$ z $T$ dostaneme rozklad $V$ na dve množiny,
+a teda rez v $G$. Vieme, že cena hrany $e_{\min}$ v $T$ je veľkosť minimálneho rezu $G$ medzi
+koncovými vrcholmi $e_{\min}$. Teraz sa pokúšame ukázať, že tento rez je zároveň minimálny $u-v$ rez.
+\end{myfig}
+
+
+Na to, aby sme ukázali opačnú nerovnosť, t.j. $\omega'(e_{\min})\le  f_G(u,v)$, si pomôžeme nasledovnou lemou:
+
+\begin{lema}
+  \label{lm:kcutreclema}
+  Majme graf $G=(V,E)$ a nech $\{v_1,v_2,\ldots,v_z\}\subseteq V$. Potom
+  $$f_G(v_1,v_z)\ge\min\{f_G(v_1,v_2),f_G(v_2,v_3),\ldots,f_G(v_{z-1},v_z)\}.$$
+\end{lema}
+
+\begin{dokaz}
+  Urobíme indukciu na $z$. Pre $z=2$ lema triviálne platí. Ak $z>2$, z indukčného predpokladu vieme,
+  že $f(v_2,v_z)\ge\min\{f(v_2,v_3),\ldots,f(v_{z-1},v_z)\}$. Preto nám stačí ukázať, že
+  $f(v_1,v_z)\ge\min\{ f(v_1,v_2), f(v_2,v_z) \}$. Predpokladajme sporom, že 
+  $f(v_1,v_z)<\min\{ f(v_1,v_2), f(v_2,v_z) \}$ a nech $C$ je minimálny $v_1-v_z$ rez v $G$. 
+  Bez ujmy na všeobecnosti, nech
+   $v_2$
+   je na rovnakej strane rezu, ako $v_1$ (ináč premenujeme $v_1$ a $v_z$ a máme symetrickú situáciu).
+  $C$ je zároveň $v_2-v_z$ rez, a preto
+  $f(v_2,v_z)\le f(v_1,v_z)$, spor.
+\end{dokaz}
+
+Teraz vieme, že $f_G(u,v)\ge\min\{f_G(w_0,w_1),f_G(w_1,w_2),\ldots,f_G(v_{z-1},w_z)\}.$
+Zároveň, pretože $(w_i,w_{i+1})\in E'$, z predchádzajúcich úvah vieme, že 
+$f_G(w_i,w_{i+1})=\omega'((w_i,w_{i+1}))$, a teda
+$$f_G(u,v)\ge\min\{\omega'(w_0,w_1),\ldots,\omega'(w_{z-1},w_z)\}=\omega'(e_{\min}).$$
+
+\vskip 2ex
+Teraz, keď už vieme, že ak po skončení algoritmu invariant platí, tak máme dobrý Gomory-Hu strom,
+poďme navrhnúť algoritmus tak, aby invariant ostával v platnosti. Ako sme už povedali, v jednej iterácii
+si algoritmus vyberie krabicu $S$ (ľubovoľnú) s aspoň dvoma vrcholmi $x$ a $y$ (ľubovoľnými) a rozdelí
+$S$ na dve menšie krabice. Toto rozdelenie sa urobí takto: zakoreníme strom $T^{(t)}$ v  $S$ 
+ a nech
+$T_1,\ldots,T_z$ sú podstromy synov $S$. Pre podstrom $T_i$ označme $V_i$ tie vrcholy grafu $G$, ktoré
+sú v niektorej krabici z tohto podstromu, t.j. $V_i:=\{v\in V\mid \exists S'\in T_i:\;v\in S'\}$.
+Z $G$ zostrojíme graf $G'$ tak, že vrcholy z $V_i$ sa stotožnia a nahradia sa novým vrcholom $y_i$,
+pričom hrany ostanú (t.j. nový graf môže mať násobné hrany). V grafe $G'$ 
+nájdeme minimálny $x-y$ rez $T$. Krabicu $S$ nahradíme dvoma krabicami $S_x:=S\cap T$, $S_y:= S-S_x$.
+Do stromu pridáme hranu spájajúcu $S_x$ a $S_y$ s cenou $\partial_G(T)$. Podstromy $T_i$, pre ktoré
+$y_i\in T$, budú susediť s $S_x$, zvyšné podstromy s $S_y$.
+
+
+\begin{myfig}{\textwidth}{svg/kcut4}
+  Vľavo je stav na začiatku iterácie: máme štyri krabice pospájané hranami do stromu (modré
+  čísla sú váhy $\omega'$ v $T^{(t)}$, čierne sú pôvodné váhy $\omega$ v $G$).
+  Jednu krabicu $S$ sme vybrali za koreň a vybrali dva ľubovoľné vrcholy $x,y\in S$.
+  $S$ má dvoch synov a príslušné podstromy skontrahujeme do dvoch vrcholov; dostaneme tak graf vpravo,
+  v ktorom nájdeme minimálny $x-y$ rez $T$. 
+\end{myfig}
+
+
+
+\begin{myfig}{\textwidth}{svg/kcut5}
+Nájdený rez jednak definuje, ako rozdeliť $S$ na $S_x$ a $S_y$, a zároveň určuje, ktorý podstrom bude kam patriť.
+\end{myfig}
+
+Na záver rozprávania o Gomory-Hu stromoch potrebujeme ukázať, že takto definovaný spôsob rozbíjania krabíc
+zachováva v platnosti invariant, teda že ak na začiatku iterácie invariant platil, bude platiť aj po jej skončení.
+Zjavne pre hrany stromu, ktoré sú v niektorom podstrome $T_i$, sa počas iterácie nič nezmenilo: svedkovia ostali,
+váha hrany aj rez ňou definovaný sa taktiež nezmenili. Pre hrany, ktoré v pôvodnom strome boli incidentné s $S$
+sa nezmenila váha, ani hodnota rezu, ale mohlo sa stať, že po rozdelení $S$ sa jeden svedok stratil a budeme
+musieť nájsť iného. Napokon
+treba ukázať platnosť invariantu pre novú hranu $(S_x,S_y)$. 
+V tom všetkom nám viackrát pomôže nasledovná lema:
+
+\begin{lema}
+  \label{lm:kcutlema}
+  Majme graf $G=(V,E)$ a nech $S\subseteq V$ je nejaký minimálny $r-s$ rez pre $r,s\in V$, pričom $s\in S$.
+  Ďalej, nech $v,w\in S$ sú dva ľubovoľné vrcholy. Potom existuje minimálny $v-w$ rez $T$ v $G$ taký, že 
+  $T\subset S$.
+\end{lema}
+
+\begin{dokaz}
+  Zoberme si nejaký minimálny $v-w$ rez $X$. Ak $X\subset S$ (alebo $V-T\subset S$), niet čo dokazovať.
+  Takže predpokladajme, že $S\cap X\not=\emptyset$ a uvažujme výraz $A:=\partial(S)+\partial(X)$. 
+  Podľa príslušnosti koncových vrcholov do $S$ a $X$ máme 6 typov hrán, ktoré prispievajú do $A$.
+  V nasledujúcom obrázku je pre každý typ hrán uvedená násobnosť, t.j. napríklad každá z hrán medzi $S-X$ a $X-S$
+  je zarátaná dvakrát (raz v $\partial(S)$ a raz v $\partial(X)$), každá z hrán medzi $S-X$ a $S\cap X$ 
+  sa zarátava raz (v $\partial(X)$)  atď.
+
+  \begin{myfig}{0.4\textwidth}{svg/kcut6}
+  \end{myfig}
+
+  \vspace*{-6ex}
+  Rozlíšme teraz dva prípady: 
+
+  {\bf 1. $r\in X$.} Budeme uvažovať výraz $B:=\partial(S-X)+\partial(X-S)$ a podobne ako pre výraz $A$, 
+  aj teraz sa pozrime, ktoré hrany sa koľkokrát započítajú:
+  
+  \begin{myfig}{0.4\textwidth}{svg/kcut7}
+  \end{myfig}
+  \vspace*{-6ex}
+
+  Porovnaním počtov zarátaných hrán vidíme, že $B\le A$, t.j.
+  $$\partial(S-X)+\partial(X-S)\le\partial(S)+\partial(X).$$
+  Zároveň, pretože $s\in S$,  $X-S$ je $r-s$ rez, a keďže
+  $S$ je minimálny $r-s$ rez, platí $\partial(X-S)\ge\partial(S)$.
+  Odtiaľ potom dostávame $\partial(S-X)\le\partial(X)$. Lenže $X$ aj $S-X$ sú $v-w$ rezy, a navyše $X$ je minimálny
+  $v-w$ rez. Preto  $S-X$ je minimálny $v-w$ rez, pre ktorý platí $S-X\subset S$.
+
+
+  \vskip 1ex
+  {\bf 2. $r\not\in X$.} Postup bude analogický ako v predchádzajúcom prípade, iba teraz budeme uvažovať výraz
+  $B':=\partial(S\cup X)+\partial(S\cap X)$.
+  
+  \begin{myfig}{0.4\textwidth}{svg/kcut8}
+  \end{myfig}
+
+  \vspace*{-6ex}
+  Porovnaním opäť vidíme $B'\le A$, t.j.
+  $$\partial(S\cup X)+\partial(S\cap X)\le\partial(S)+\partial(X).$$
+  Pretože $r\not\in S\cup X$, je $S\cup X$ $r-s$ rez, a preto $\partial(S\cup X)\ge\partial(S)$. 
+  Z predchádzajúcej nerovnosti potom máme $\partial(S\cap X)\le\partial(X)$, takže $S\cap X$ je minimálny
+  $v-w$ rez obsiahnutý v $S$.
+\end{dokaz}
+
+Majme teraz jednu iteráciu Gomory-Hu algoritmu, ktorá rozdelila krabicu $S$ na krabice $S_x$ a $S_y$.
+Ukážeme, že pre novú hranu $e'=(S_x,S_y)$ platí invariant. Rez definovaný hranou $e'$ je rez, ktorý vznikol
+z minimálneho $x-y$ rezu v $G'$ a $\omega'(e')$ je jeho cena. Stačí nám teda ukázať, že minimálny $x-y$ rez v $G'$
+je zároveň (po expandovaní vrcholov $y_i$) minimálny $x-y$ rez v $G$; inými slovami, minimálny $x-y$ rez v $G$
+nerozdelí vrcholy patriace do jedného podstromu $T_i$.
+
+Nech $K_1,\ldots,K_z$ sú synovia $S$ (t.j. korene podstromov $T_1,\ldots,T_z$) a 
+nech $a_i\in K_i$, $s_i\in S$ sú príslušní svedkovia. 
+Hrana $(S,K_1)$ definuje rez v $G$, 
+v ktorom na jednej strane sú vrcholy podstromu $T_1$, na druhej strane všetky ostatné vrcholy, vrátane $x$ a $y$.
+Pretože tento rez je zároveň minimálny $a_1-s_1$ rez, z Lemy~\ref{lm:kcutlema}
+dostaneme, že v $G$ existuje $x-y$ rez, ktorý nerozdelí vrcholy podstromu $T_1$. 
+Iterovaním tohto argumentu pre ostatné podstromy dostaneme požadované tvrdenie.
+
+\begin{minipage}[t]{0.3\textwidth}
+  \vskip 0pt
+  \begin{myfig}{\textwidth}{svg/kcut9}
+  \end{myfig}
+\end{minipage}\hfill
+\begin{minipage}[t]{.6\textwidth}
+  \vskip 0pt
+Posledná vec, ktorú potrebujeme ukázať, sa týka hrán $(S,K_i)$. Na začiatku iterácie boli svedkovia
+$a_i\in K_i$, $s_i\in S$, ktorí dosvedčili platnosť invariantu. Bez ujmy na všeobecnosti, nech
+po skončení iterácie sa z hrany $(S,K_i)$ stala hrana $(S_x,K_i)$. Ak $s_i\in S_x$, invariant 
+zjavne ostáva v platnosti. Mohlo sa ale stať, že $s_i\in S_y$.
+V tom prípade zoberieme za nového svedka $x$ a ukážeme, že $f_G(a_i,x)=f_G(a_i,s_i)$.
+
+Na jednej strane, pretože rez definovaný hranou $(S,K_i)$ je minimálny $a_i,s_i$ rez v $G$, a zároveň
+oddeľuje $a_i$ od $x$, platí $f_G(a_i,x)\le f_G(a_i,s_i)$.
+\end{minipage}
+
+Aby sme ukázali opačnú nerovnosť, vyrobme z $G$  pomocný graf $\hat{G}$, 
+v ktorom skontrahujeme $S_y$ do jedného vrchola $\hat{y}$. Pretože $S_x$ a $S_y$ vznikli podľa minimálneho $x-y$ rezu,
+môžme použiť Lemu~\ref{lm:kcutlema} a argumentovať, že $f_G(a_i,x)=f_{\hat{G}}(a_i,x)$.
+Zároveň z Lemy~\ref{lm:kcutreclema} vieme, že $f_{\hat{G}}(a_i,x)\ge\min\{f_{\hat{G}}(x,\hat{y}), 
+f_{\hat{G}}(a_i,\hat{y})\}$.
+Z minimálneho $a_i-\hat{y}$ rezu v $\hat{G}$ expandovaním $\hat{y}$ vznikne nejaký  $a_i-s_i$ rez v $G$, a preto
+$f_{\hat{G}}(a_i,\hat{y})\ge f_G(a_i,s_i)$.
+Z rovnakých dôvodov platí $f_{\hat{G}}(x,\hat{y})\ge f_G(x,y)$; zároveň ale minimálny $x-y$ rez v $G$
+oddeľuje $a_i$ a $s_i$, preto $f_G(x,y)\ge f_G(a_i,s_i)$, takže aj $f_{\hat{G}}(x,\hat{y})\ge f_G(a_i,s_i)$.
+
+\subsection*{Naspäť k \kcut}
+
+Uvažujme nasledovný jednoduchý algoritmus: pre daný graf $G=(V,E)$ zostroj Gomory-Hu strom $T$.
+Zober $k-1$ najlacnejších hrán z $T$, $T$ sa tak rozpadne na $k$ súvislých komponentov. Tieto
+komponenty vráť ako riešenie problému \kcut.
+Ukážeme, že tento algoritmus je $2\left(1-\frac{1}{k}\right)$-aproximačný.
+
+Nech hrany $T$ majú váhy $\omega'(e'_1)\le\omega'(e'_2)\le\cdots\le\omega'(e'_{n-1})$ a nech
+$C_1,\ldots,C_k$ sú komponenty súvislosti optimálneho riešenia, pričom 
+$\partial(C_1)\le\partial(C_2)\le\cdots\le\partial(C_k)$.
+Z definície Gomory-Hu stromu, $\omega'(e'_i)=\partial_G(cut_T(e'))$, t.j. cena hrany v $T$ je cena
+príslušného rezu v $G$. Keďže
+algoritmus zoberie zjednotenie prvých $k-1$ rezov, môže sa stať, že niektoré hrany patria do viacerých
+rezov, ale v každom prípade pre cenu algoritmu platí $ALG\le\sum_{i=1}^{k-1}\omega'(e'_i)$.
+Na druhej strane, pre cenu optimálneho riešenia platí $2\cdot OPT=\sum_{i=1}^k\partial_G(C_i)$. Naším 
+cieľom bude nájsť nejakých $k-1$ hrán v $T$ tak, že $i$-ta nájdená hrana má cenu nanajvýš $\partial_G(C_i)$.
+Ak sa nám to podarí, budeme vedieť, že $ALG\le\sum_{i=1}^{k-1}\partial_G(C_i)$, lebo algoritmus
+vyberá $k-1$ najlacnejších hrán z $T$. Zvyšné argumenty sú potom rovnaké ako v prípade \multiwaycut.
+
+Zoberme si strom $T$ a skontrahujme každý komponent $C_i$ do jedného vrchola. Takto vzniknutý graf $T'$ môže mať 
+cykly aj násobné hrany.
+
+\begin{myfig}{0.9\textwidth}{svg/kcut10}
+\end{myfig}
+
+Vyhoďme z $T'$  hrany tak, aby ostal strom $T''$  a zakoreňme ho v $C_k$.
+Pre každý vrchol $C_i$, $i=1,\ldots,k-1$ zoberme hranu $e'_{h_i}$, 
+ktorá ide k jeho rodičovi v $T''$; dostali sme $k-1$ hrán z $T$. Ukážeme, že $\omega'(e'_{h_i})\le\partial_G(C_i)$,
+čím sa celý dôkaz skonči.
+Hrana $e'_{h_i}=(u,v)$ má jeden koncový vrchol v $C_i$ a druhý mimo $C_i$. $\omega'(e'_{h_i})$ je cena
+minimálneho $u-v$ rezu v $G$. Ale $C_i$ tiež oddeľuje $u$ od $v$, a preto $\omega'(e'_{h_i})\le\partial_G(C_i)$.
+
+

@@ -1,0 +1,1033 @@
+\section{Primárno-duálna metóda}
+
+\noindent
+Dúfame, že sme čitateľa presvedčili o tom, že dualita je zaujímavá vlastnosť lineárnych
+programov. Teraz je načase ukázať, ako sa dá využiť pri návrhu algoritmov. Pozrime sa na dvojicu
+duálnych programov
+\begin{eqnarray*}
+  (P):&\min\limits_{\bm{x}\in\R^n}\{\bm{c}\tr\bm{x}\mid A\bm{x}\ge\bm{b}, \bm{x}\ge 0\}\\
+  (D):&\max\limits_{\bm{y}\in\R^m}\{\bm{b}\tr\bm{y}\mid A\tr\bm{y}\le\bm{c}, \bm{y}\ge 0\}
+\end{eqnarray*}
+
+\noindent
+Z vety o dualite vieme, že majú rovnakú hodnotu optima, t.j. že existujú vektory $\bm{x^\star}\ge0$
+a $\bm{y^\star}\ge0$, že 
+$A\bm{x^\star}\ge\bm{b}$, $A\tr\bm{y^\star}\le\bm{c}$
+a
+$\bm{c}\tr\bm{x^\star}=\bm{b}\tr\bm{y^\star}$.
+Pripomeňme si nerovnosti z dôkazu Vety~\ref{thm:weakduality}, ktoré platia pre všetky dvojice prípustných
+riešení primárnej a duálnej úlohy, a teda aj pre $\bm{x^\star}$, $\bm{y^\star}$:
+
+\begin{equation}
+  \label{eq:proofSlack}
+  \bm{c}\tr\bm{x^\star}\stackrel{(\clubsuit)}{\ge}\left(A\tr\bm{y^\star}\right)\tr\bm{x^\star}
+=\bm{y^\star}\tr A\bm{x^\star}\stackrel{(\diamondsuit)}{\ge}\bm{y^\star}\tr\bm{b}
+\end{equation}
+
+\noindent
+Keďže $\bm{c}\tr\bm{x^\star}=\bm{b}\tr\bm{y^\star}$, $(\clubsuit)$ aj $(\diamondsuit)$ musia
+byť rovnosti. Pozrime sa na $(\clubsuit)$ a rozpíšme vektorový zápis pomocou sumy:
+
+\begin{equation}
+  \label{eq:kompl:1}
+  \sum_{j=1}^n c_jx^\star_j=\sum_{j=1}^n\left[A\tr\bm{y^\star}\right]_jx^\star_j,
+\end{equation}
+
+\noindent
+kde symbol $[\cdot]_j$ označuje $j$-ty prvok vektora. Z prípustnosti duálneho riešenia vieme, že
+$\bm{c}\ge A\tr\bm{y^\star}$; nerovnosť vektorov platí v každej zložke, takže pre každé $j$ je
+$c_j\ge\left[A\tr\bm{y^\star}\right]_j$.
+Pre každé $j$ je  $x^\star_j\ge0$, a teda aj $c_jx^\star_j\ge\left[A\tr\bm{y^\star}\right]_jx^\star_j$.
+Z toho vidieť, že ak má platiť rovnosť (\ref{eq:kompl:1}), musí platiť rovnosť v každej zložke.
+
+\noindent
+Rovnaké úvahy sa dajú urobiť pre nerovnosť $(\diamondsuit)$ a dostaneme tak nasledovnú charakterizáciu
+optimálneho riešenia:
+
+\begin{framed}
+\begin{veta}[podmienky komplementarity]
+  \label{thm:slackness}
+Nech \bm{x}, \bm{y} sú prípustné riešenia primárnej a duálnej úlohy. 
+Potom \bm{x}, \bm{y} sú obidve optimálne {\bf vtedy a len vtedy}, ak
+sú splnené obe nasledujúce podmienky:
+
+\begin{itemize}
+\item primárna podmienka komplementarity:
+$$\forall\;1\le j\le n:\;{\rm\ buď\ }\; x_j=0\; {\rm\ alebo\ }\sum_{i=1}^ma_{ij}y_i=c_j$$
+\item duálna podmienka komplementarity:
+$$\forall\;1\le i\le m:\;{\rm\ buď\ }\; y_i=0\; {\rm\ alebo\ }\sum_{j=1}^na_{ij}x_j=b_i$$
+\end{itemize}
+\end{veta}
+\end{framed}
+
+\subsection*{Edmondsov algoritmus pre \minfactor}
+
+\noindent
+Podmienky komplementarity sú užitočný nástroj pri analýze algoritmov, lebo poskytujú jednoduchý invariant,
+ktorý charakterizuje optimum. Pripomeňme si definíciu problému\\ \maxWBmatching z časti o ILP:
+
+{
+  \renewcommand{\thedummy}{\ref{dfn:maxWBmatching}}
+  \begin{dfn}
+    Majme daný bipartitný graf s hranami ohodnotenými nezápornými reálnymi
+    číslami. Cieľom problému \maxWBmatching je nájsť množinu hrán s najväčším
+    súčtom váh tak, aby žiadne dve vybraté hrany nezdieľali vrchol.
+  \end{dfn}
+}
+
+\noindent
+Problém sme vtedy formulovali ako celočíselný program
+
+\begin{equation*}
+\begin{array}{rrcll}
+  {\rm maximalizovať}     & \multicolumn{1}{l}{\sum\limits_{e\in E}\omega_ex_e}\\[3ex]
+  {\rm pri\ obmedzeniach} & \sum\limits_{e\in E\atop e=(v,w)}x_e&\le&1& \;\;\;\forall v\in V\\
+                          & x_e&\ge&0& \;\;\;\forall e\in E\\
+                          & x_e&\in&\Z
+\end{array}
+\end{equation*}
+
+\noindent
+kde $\bm{\omega}\in\R^n$ je vektor váh hrán. Ukázali sme, že matica obmedzení je TUM, a preto stačí vyriešiť 
+relaxovaný program a podmienky celočíselnosti máme zadarmo. Celkom prirodzene sa natíska otázka: 
+''{\em A čo keby ten graf nebol bipartitný?}'' Formulácia ILP bude stále v poriadku, ale už nebude platiť, že
+musí existovať optimálne celočíselné riešenie.
+
+
+\begin{myfig}{0.8\textwidth}{svg/matchingLP}
+  Vľavo je graf s váhami hrán. Maximálne párovanie má hodnotu $21$: hrany váhy $10$ sú iba medzi vrcholmi 
+  $\{p,q,r,s,t\}$, t.j. môžu byť v riešení najviac dve. Zo zvyšných hrán môže byť najviac 1.
+  Vpravo riešenie relaxovaného programu s hodnotou $25$.
+\end{myfig}
+
+\noindent
+Prv, než budeme pokračovať, upravíme trocha formuláciu nášho problému. Párovaniu, ktoré pokrýva všetky hrany,
+t.j. takej množine hrán $E'\subseteq E$, že každý vrchol susedí s práve jednou hranou z $E'$, 
+budeme hovoriť {\em perfektné párovanie}, respektíve {\em 1-faktor} (pochopiteľne, aby graf mal 1-faktor,
+musí mať párny počet vrcholov). Namiesto hľadania najťažšieho párovania
+nám stačí vedieť hľadať najťažší 1-faktor: z grafu $G$ vyrobíme $G'$ tak, že ak má  $G$ nepárny počet 
+vrcholov, pridáme k nemu jeden izolovaný vrchol a potom všetky vrcholy, ktoré nie sú spojené hranou spojíme
+hranou váhy 0. Čitateľ sa ľahko presvedčí, že párovania v $G$ zodpovedajú 1-faktorom v $G'$.
+
+\noindent
+Ďalej nech $\omega_{\max}$ je maximálna váha hrany v $G'$. Ak vyrobíme $G''$ tak, že
+nastavíme nové váhy $\omega''_e=\omega_{\max}-\omega_e$, tak vidno, že najľahší 1-faktor v $G''$ je 
+najťažší 1-faktor v $G''$. Dostali sme sa tak k nasledovnej definícii:
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:minFactor}
+    Majme daný úplný ohodnotený graf $G=(V,E)$ na $n=2k$ vrcholoch, pričom hrana
+    $e=(u,v)\in E$ má váhu $\omega_e\in\R^+$.  Problém \minfactor je 
+    nájsť 1-faktor v $G$, pre ktorý je súčet váh hrán
+    minimálny, t.j.
+    $\min_{E'}\sum_{e\in E'}\omega(e),$
+    kde minimum je brané cez všetky 1-faktory $E'$.\end{dfn}\end{framed}
+
+
+\noindent
+Čitateľ, ktorý s nami vydržal až potiaľto, určite nebude mať ťažkosti zapísať \minfactor ako celočíselný
+lineárny program:
+pre každú hranu $e\in E$ zavedieme premennú $x_e\in\{0,1\}$, ktorá
+vyjadruje, či je hrana $e$ vybratá do párovania alebo nie.
+Vybratá množina hrán je 1-faktor práve vtedy, ak s každým vrcholom susedí práve jedna vybratá
+hrana, čo priamočiaro zapíšeme
+
+\begin{equation}
+  \label{eq:1f:ILP}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{\sum\limits_{e\in E}\omega_ex_e}\\[3ex]
+  {\rm pri\ obmedzeniach} &  \sum\limits_{e\in E\atop e=(u,v)} x_e &=&1& \;\;\;\forall v\in V\\
+                          & x_e&\in&\{0,1\}& \;\;\;\forall e\in E\\
+\end{array}
+\end{equation}
+
+\noindent
+Ak tento program relaxujeme a namiesto $x_e\in\{0,1\}$ budeme požadovať iba $x_e\ge0$ 
+(čitateľ si všimne, že $x_e\le1$ vyplýva z minimality), optimum už nemusí byť celočíselné. 
+V nasledujúcich odstavcoch predstavíme primárno-duálny prístup podľa Edmondsa \cite{Edmonds65}.
+Najprv ale ešte jedno označenie, ktoré nám zjednoduší zápis:
+
+\begin{dfn}[hranová hranica množiny]
+  \label{dfn:edgeboundary}
+Majme graf $G=(V,E)$ a množinu vrcholov $S\subseteq V$. Hranová hranica množiny S, označovaná $\delta(S)$, je množina hrán 
+s jedným koncom v $S$ a druhým mimo $S$, t.j.:
+$$\delta(S):=\{e\in E\mid e=(u,v),\;u\in S,\;v\in V\setminus S\}$$
+\end{dfn}
+
+\noindent
+Ako sa vysporiadať s tým, že relaxácia programu (\ref{eq:1f:ILP}) nemá celočíselné riešenie? Trik je v tom,
+že pridáme (veľa) dodatočných obmedzení, ktoré zabezpečia celočíselnosť optima. Nech \S
+sú všetky aspoň trojprvkové 
+množiny s nepárnym počtom vrcholov, t.j.
+
+$$\S:=\left\{ S\subseteq V\mid\; |S|>1,\;|S|\;\text{\ nepárne\ }\right\}$$
+
+\noindent
+Každá hrana má dva konce, a preto vrcholy z $S\in\S$ nemôžu byť popárované medzi sebou, takže
+v každom 1-faktore musí aspoň 1 hrana odchádzať z $S$. Pridáme tieto obmedzenia k relaxovanému programu
+(\ref{eq:1f:ILP}),
+čím dostaneme
+
+\begin{equation}
+  \label{eq:1f:P}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{\sum\limits_{e\in E}\omega_ex_e}\\[4ex]
+  {\rm pri\ obmedzeniach} &  \sum\limits_{e\in\delta(\{v\})} x_e &=&1& \;\;\;\forall v\in V\\[4ex]
+                          & \sum\limits_{e\in\delta(S)}x_e&\ge&1&\;\;\;\forall S\in\S\\[4ex]
+                          & x_e&\ge&0& \;\;\;\forall e\in E\\
+\end{array}
+\end{equation}
+
+\noindent
+\ldots a {\em voilà!} Máme lineárny program, ktorý má celočíselné optimálne riešenie.
+Dostali sme sa však z dažďa pod odkvap: po prvé potrebujeme dokázať, že naozaj existuje
+celočíselné optimum programu (\ref{eq:1f:P}) a podruhé potrebujeme riešiť program, ktorý má 
+exponenciálne veľa obmedzení. Ani jeden z týchto problémov nie je neprekonateľný, ale my
+to spravíme elegantne: využijeme dualitu a vyhneme sa riešeniu (\ref{eq:1f:P}); a navyše 
+dôkaz celočíselnosti vypadne zadarmo.
+Spôsob návrhu algoritmov, ktorý tu ukážeme, sa zvykne nazývať {\em primárno-duálna metóda}.
+
+\noindent
+Použime náš dualizačný recept a zostrojme duálny program k (\ref{eq:1f:P}).
+Duálny program bude maximalizačný a bude mať premennú pre každé obmedzenie. Máme dva typy
+obmedzení: pre vrcholy a pre množiny, takže si zavedieme duálne premenné $r_v\in R$ pre $v\in V$
+a premenné $w_S\in\R^+$ pre $S\in\S$.
+Každá primárna premenná  $x_e$ má vklad $x_e\omega_e$ do minimalizačnej funkcie a vyskytuje
+sa v dvoch obmedzeniach pre vrcholy (konkrétne pre dva koncové vrcholy $e$) a v obmedzeniach
+pre tie množiny $S\in\S$, kde $e\in\delta(S)$.
+Dostali sme duálny program (všimnite si, že $r_v$ môže byť aj záporné):
+
+\begin{equation}
+  \label{eq:1f:D}
+\begin{array}{rrcll}
+  {\rm maximalizovať}     & \multicolumn{1}{l}{\sum\limits_{v\in V}r_v + \sum\limits_{S\in\S}w_S}\\[4ex]
+  {\rm pri\ obmedzeniach} & 
+        r_u + r_v + \sum\limits_{S\in\S\atop e\in\delta(S)} w_S &\le&\omega_e& \;\;\;\forall e=(u,v)\in E\\[4ex]
+                          & w_S&\ge&0& \;\;\;\forall S\in\S\\
+\end{array}
+\end{equation}
+
+\noindent
+Z didaktických dôvodov, a aj preto, že v našej dvojici programov nie sú všetky premenné nezáporné,
+prepíšme nerovnosť (\ref{eq:proofSlack}) v našom značení:
+
+
+$$
+\sum_{e\in E}x_e\omega_e
+\stackrel{\clubsuit}{\ge}
+\sum_{e\in E\atop e=(u,v)}x_e(r_u+r_v+\sum_{S\in\S\atop e\in\delta(S)}w_S)
+\stackrel{\heartsuit}{=}
+\sum_{v\in V}(r_v  \textcolor{blue}{\sum_{e\in\delta(\{v\})}x_e} )   + \sum_{S\in\S}w_S
+\textcolor{red}{\left(\sum_{e\in\delta(S)}x_e\right)}
+\stackrel{\diamondsuit}{\ge}
+\sum_{v\in V}r_v+\sum_{S\in\S}w_S
+$$
+
+
+\noindent
+Rovnosť $(\heartsuit)$ platí preto, lebo na ľavej strane je
+pre každý vrchol $v\in V$ hodnota $r_v$ zarátaná s koeficientom $x_e$
+pre všetky hrany incidentné s $v$ a hodnota $w_S$ je zarádaná s koeficientom $x_e$ pre všetky hrany z hranice $S$.
+Z obmedzení programu (\ref{eq:1f:P}) vyplýva, že modrá suma $\sum_{e\in\delta(\{v\})}x_e=1$ a
+červená suma $\sum_{e\in\delta(S)}x_e\ge1$, preto podmienky komplementarity majú tvar
+
+$$\begin{array}{lrl}
+  {\bf S1} (\clubsuit) \;\;&\forall e=(u,v)\in E:\;\;&x_e>0\Rightarrow r_u + r_v +
+  \displaystyle\sum\limits_{S\in\S\atop e\in\delta(S)}w_S=\omega(e)\\[6ex]
+  {\bf S2} (\diamondsuit)\;\;&\forall S\in\S:\;\; & w_S>0\Rightarrow \displaystyle\sum\limits_{e\in\delta(S)}x_e=1
+\end{array}$$
+
+
+\noindent
+Pozrime sa teraz na program (\ref{eq:1f:D}) a skúsme mu dať nejakú intuitívnu interpretáciu.
+Predstavme si, že okolo každého vrchola $v\in V$ (resp. okolo každej  množiny $S\in\S$) 
+môže byť bublina s nábojom $r_v$ (resp. $w_S$). Samozrejme, množiny s \S sa môžu rôzne prekrývať,
+a tak predstava bublín okolo každej z nich nie je úplne intuitívna, ničmenej nakoniec budeme
+využívať iba systémy do seba zapadajúcich bublín. Program (\ref{eq:1f:D}) nám hovorí,
+že chceme maximalizovať celkový náboj. Váhy hrán si teraz vieme predstaviť ako kapacitu a obmedzenia
+hovoria, že žiadnu hranu $e$ nesmieme ''pretrhnúť'': celkový náboj na všetkých bublinách, ktoré pretínajú
+$e$ nesmie prekročiť jej kapacitu. 
+Hranu $e$, pre ktorú platí $ r_u + r_v + \sum_{S\in\S\atop e\in\delta(S)}w_S=\omega(e)$, nazveme {\em plná}.
+Podmienky {\bf S1} a {\bf S2} spolu s vetou o dualite vieme interpretovať takto:
+
+\begin{lema}
+  \label{lm:1f:opt}
+  Ak (ľubovoľným spôsobom) nájdeme 1-faktor $M$ a hodnoty bublín \bm{r} a \bm{w} tak, že
+  \begin{itemize}
+    \item[{\bf (I1)}] žiadna hrana nie je preplnená,
+    \item[{\bf (I2)}] hodnoty $w_S\ge 0$,
+    \item[{\bf (I3)}] všetky hrany z $M$ sú plné  a
+    \item[{\bf (I4)}]  z každej nenulovej bubliny $S\in\S$ odchádza práve jedna hrana z $M$,
+\end{itemize}
+  tak máme optimálne riešenie dvojice programov (\ref{eq:1f:P}) a (\ref{eq:1f:D}), ktoré má celočíselné
+  hodnoty \bm{x}, a teda tvorí minimálny 1-faktor.
+\end{lema}
+
+\begin{dokaz}
+  Podmienky {\bf (I1)} a {\bf (I2)} zaručujú prípustnosť duálneho programu (\ref{eq:1f:D}). Fakt, že $M$ je
+  1-faktor zaručuje prípustnosť primárneho programu (\ref{eq:1f:P}). Podmienky {\bf (I3)} a {\bf (I4)}
+  sú  vporadí podmienky {\bf S1} a {\bf S2}, takže tvrdenie je dôsledok Vety~\ref{thm:slackness}.
+\end{dokaz}
+
+\noindent
+Od tohoto momentu môžeme zabudnúť na celé lineárne programovanie a ideme sa snažiť nájsť algoritmus,
+ktorý vyrobí hľadané objekty $M$, \bm{r} a \bm{w}.
+Ako sme už naznačili, keďže \bm{w} je príliš veľké, budeme si pamätať iba jeho nenulové zložky; zároveň
+budeme hľadať iba také riešenia, v ktorých sa množiny s nenulovými bublinami nepretínajú. Chceli by sme
+dostať nejakú takúto štruktúru:
+
+\vbox{
+\begin{myfig}{0.8\textwidth}{svg/edmondsOverview}
+  Modré bubliny majú všetky hodnotu $1/2$, hrany, ktoré nie sú zakreslené, majú váhu $\infty$. 
+  Červené hrany tvoria 1-faktor.
+  Žiadna hrana nie je preplnená, všetky červené hrany sú plné a z každej zelenej bubliny odchádza práve jedna
+  červená hrana; preto vieme, že červený 1-faktor je minimálny.
+\end{myfig}
+}
+
+
+\noindent
+Samozrejme, nikde zatiaľ nemáme zaručené, že takáto konfigurácia vždy existuje. Ale ak to dokážeme a nájdeme
+algoritmus, ktorý ju vyrobí, môžeme zajasať a úlohu označiť za splnenú.
+
+
+\noindent
+Začnime neformálnym opisom činnosti algoritmu po štarte. Počas celého algoritmu budú
+podmienky {\bf (I1)}, {\bf (I2)} a {\bf (I3)} udržiavané v platnosti.
+Algoritmus začne s tým, že párovanie $M$ bude prázdne a všetky bubliny budú nulové. Postupne sa bude snažiť pridávať
+náboj do bublín a hrany do párovania tak, aby nakoniec $M$ bol 1-faktor a boli splnená podmienka {\bf (I4)};
+potom $M$ bude minimálny 1-faktor.
+V prvom kroku začne pridávať náboj na všetky bubliny $r_v$ (v ďalšom budeme tieto bubliny volať {\em modré}, kým
+bubliny $w_S$ budú {\em zelené}). Časom sa stane, že dve modré bubliny $r_u$ a $r_v$ 
+naplnia nejakú hranu $e=(u,v)$. Hrana $e$ sa pridá do $M$ a bublinám $r_u$ a $r_v$ sa nebude v ďalšom 
+kroku pridávať náboj (budú tvoriť {\em činku}). 
+Raz sa ale naplní aj nejaká hrana $e$, ktorej jeden vrchol už patrí hrane z $M$. Táto
+hrana je plná, a preto jej koncové bubliny sa nemôžu zväčšiť, a zároveň sa nemôže pridať do $M$. Nazveme ju 
+{\em blokujúca} hrana a algoritmus si bude udržiavať množinu blokujúcich hrán $L$.
+
+\begin{myfig}{0.6\textwidth}{svg/edmonds1}
+\end{myfig}
+
+\noindent
+Okrem voľných bublín a činiek vznikol ďalší útvar: cesta dĺžky 3 zložená z hrany z $L$ a hrany z $M$;
+cesty, na ktorých sa striedajú hrany z $L$ a $M$ budeme volať {\em alternujúce}.
+Keď sa v ďalšom bude voľným bublinám pridávať náboj $+\varepsilon$, bublinám z alternujúcej cesty
+sa bude striedavo pridávať $+\varepsilon$ a $-\varepsilon$, aby sa žiadna hrana nepreplnila (pripomíname,
+že na rozdiel od zelených bublín, modré bubliny môžu mať záporný náboj). V ďalšom sa naplní hrana
+medzi dvoma bublinami, ktorým sa náboj pridáva, a môžu tak vznikať stromy z alternujúcich ciest
+(tzv. {\em maďarské stromy}). Ak naplnenou hranou vznikne alternujúca cesta s nepárnym počtom hrán,
+je to dobré, lebo sa môže zväčšiť párovanie tak, že na tejto ceste sa vymení príslušnosť hrán medzi $M$ a $L$
+a z alternujúcej cesty ostane sada činiek.
+
+\begin{myfig}{0.9\textwidth}{svg/edmonds2}
+\end{myfig}
+
+\vspace*{-5ex}
+\noindent
+Čo ale máme robiť, ak sa napríklad naplní hrana medzi dvoma bublinami v jednom strome? Toto je moment, v ktorom
+dozrel čas na zelené bubliny a ich hierarchické štruktúry. 
+
+\vskip 2ex
+\noindent
+Základnou dátovou štruktúrou algoritmu je {\em kvet}. Každý kvet má vonkajšiu bublinu a v nej jeden význačný vrchol
+zvaný {\em stopka}. Najjednoduchší kvet je jeden vrchol s modrou bublinou okolo neho. Zložitejšie kvety vznikajú
+rekurzívne: 
+majme nepárny počet kvetov $K_1,K_2,\ldots,K_{2r+1}$, $r\ge 1$ (t.j. aspoň tri kvety) 
+tak, že stopky kvetov $K_{2i}$ a $K_{2i+1}$ pre $i=1,\ldots,r$
+sú spojené hranou z $M$, a zároveň pre každú dvojicu kvetov 
+$A:=K_{2i-1}$ a $B:=K_{2i}$ pre $i=1,\ldots,r$ a $A:=K_{2r+1}$ a $B:=K_1$ existujú vrcholy $u\in A$ a $v\in B$
+také, že hrana $(u,v)\in L$. Potom bublina ohraničujúca $K_1,\ldots,K_{2r+1}$ vytvorí nový kvet, ktorého stopka
+bude stopka kvetu $K_1$. Kvety, ktoré nie sú súčasťou iného kvetu, budeme volať {\em vonkajšie kvety}.
+
+\begin{myfig}{0.7\textwidth}{svg/edmonds3}
+  \centerline{Päť rôznych vonkajších kvetov so stopkami  označenými štvorcom. Červené hrany sú z $M$, čierne z $L$.}
+\end{myfig}
+
+\noindent
+Za povšimnutie stojí, že kvet uzatvára časť grafu, ktorú máme ''takmer hotovú'': okrem stopky sú všetky vrcholy
+kvetu pospájané hranami z $M$ a zároveň každú bublinu pretína práve jedna hrana z $M$,  s výnimkou bublín, 
+ktoré ohraničujú stopku (toto je pre činnosť algoritmu kľúčové pozorovanie a čitateľovi odporúčame
+si ho detailne indukciou dokázať).  Ak je medzi stopkami dvoch kvetov plná hrana, jej pridaním do $M$
+vznikne činka. Algoritmus skončí, ak sú všetky vrcholy pokryté činkami.
+
+
+\noindent
+\begin{minipage}[t]{0.45\textwidth}
+  \vskip 0pt
+\begin{myfig}{\textwidth}{svg/edmonds4}
+  \centerline{  Operácia {\em presun} na maďarskom strome.}
+\end{myfig}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.5\textwidth}
+  \vskip 0pt
+
+  \noindent
+  Voľné kvety, ktoré netvoria činky, 
+sú organizované v maďarských stromoch. Kvet na úrovni 0 je koreň, stopka kvetu na úrovni $2h-1$ je spojená hranou 
+z $M$ so stopkou syna na úrovni $2h$. Ak má kvet $K$ na úrovni $2h$ syna $H$, tak existuje
+hrana z $L$ medzi nejakým vrcholom z $K$ a nejakým vrcholom z $H$. 
+Intuitívna predstava je takáto:
+koreň stromu je kvet $K$, ktorý by sme chceli zapojiť do činky. Lenže nemôžeme, lebo hrany, ktoré z neho odchádzajú
+a dali by sa použiť,
+nie sú plné. Chceli by sme pridať náboj na vonkajšiu bublinu $K$, ale nemôžeme, lebo nám v tom 
+bránia hrany z $L$, ktoré vedú do jeho synov. 
+
+\noindent
+Algoritmus si v každom momente udržiava sadu maďarských stromov, pričom zvyšok  grafu je pokrytý činkami.
+Algoritmus pracuje v iteráciách, pričom v každej iterácii sa urobí operácia {\em presun}: všetkým voľným 
+kvetom na párnych úrovniach stromov sa k vonkajšej bubline pripočíta $\varepsilon$ a od kvetov na nepárnych
+úrovniach sa $\varepsilon$ odpočíta. Hodnota $\varepsilon$ sa zvolí maximálna taká, kým sa nenaruší niektorá
+z podmienok {\bf (I1)}, {\bf (I2)}.
+To sa môže stať niekoľkými spôsobmi:
+\end{minipage}
+
+\noindent
+{\bf (P1) Zelenej bubline na nepárnej úrovni klesol náboj na 0. } 
+Nech $K$ je kvet, ktorému patrí nulová bublina. Z definície kvetu, $K$ obsahuje nepárny počet kvetov
+$K_1,\ldots,K_{2r+1}$, pričom stopka je vo $K_1$. Keďže $K$ je na nepárnej úrovni, má jedného rodiča
+a jedného syna, ktorý
+je napojený na stopku. Nech hrana do rodiča ide z kvetu $K_t$ a bez ujmy na
+všeobecnosti nech $t$ je nepárne. Potom cesta 
+$K_1,K_2,\ldots,K_t$  má nepárny počet kvetov a môže nahradiť $K$ v strome.
+Dvojice vrcholov $K_{t+1},K_{t+2}$ až $K_{2r},K_{2r+1}$ tvoria činky. Plné hrany 
+medzi $K_t$ a $K_{t+1}$ a $K_1,K_{2r+1}$ sa dajú odobrať z $L$, lebo v novom strome bude jedna z nich na nepárnej
+úrovni a druhá v činke, takže pri najbližšej operácii {\em posun} prestanú byť plné.
+\begin{myfig}{0.8\textwidth}{svg/edmonds5}
+\end{myfig}
+
+\vspace*{-4ex}
+\noindent
+{\bf (P2) Naplnila sa hrana $e$ medzi kvetom $K$ na párnej úrovni a činkou $H$.} Nech sa činka $H$ skladá z 
+kvetov $H_1$ a $H_2$ tak, že $e$ vedie do nejakého vrchola vo $w_1$. Hrana $e$ sa pridá do $L$ a
+činka $H$ sa pripojí k príslušnému stromu tak, že $K$ (na párnej úrovni) bude mať syna $H_1$ (na nepárnej úrovni)
+a ten bude mať jedného syna $H_2$ (na párnej úrovni).
+\begin{myfig}{0.7\textwidth}{svg/edmonds6}
+\end{myfig}
+
+\vspace*{-4ex}
+\noindent
+{\bf (P3) Naplnila sa hrana spájajúca kvety $K$ a $H$ v jednom strome.} Zjavne $K$ aj $H$ sú na párnej úrovni.
+Nech $W$ je najbližší spoločný predok $K$ a $H$. Keďže $W$ má aspoň dvoch synov, musí byť tiež na párnej úrovni.
+Nech $K,K_1,\ldots,K_{2k+1},W$ a $H,H_1,\ldots,H_{2r+1},W$ sú cesty v strome. Z parity vrcholov vyplýva, že
+ich môžme obaliť novou bublinou a dostaneme kvet $Z$ na párnej úrovni, ktorého stopka je stopka $W$. Synovia
+$Z$ budú všetci synovia zahrnutých kvetov -- títo ostanú na nepárnej úrovni.
+\begin{myfig}{0.8\textwidth}{svg/edmonds7}
+\end{myfig}
+
+\vspace*{-4ex}
+\noindent
+{\bf (P4) Naplnila sa hrana $e$ spájajúca kvety $K$ a $H$ v dvoch rôznych stromoch ${\cal T}_1$ a ${\cal T}_2$.} 
+Toto je vlastne jadro celého algoritmu, v ktorom zväčšíme párovanie $M$. Urobíme to tak, že nájdeme 
+alternujúcu cestu, ktorá spája stopku koreňa stromu ${\cal T}_1$ so stopkou koreňa ${\cal T}_2$.
+Keďže sa naplnila hrana, obidva kvety $K$ a $H$ museli byť na párnej úrovni, takže existuje cesta
+$K,K_1,\ldots,K_{2r}$ v strome ${\cal T}_1$ a $H,H_1,\ldots,H_{2q}$ v strome ${\cal T}_2$, kde $K_{2r}$ a $H_{2q}$ sú
+korene príslušných stromov. Obidve cesty sú tvorené hranami z pôvodného grafu $G$
+a striedajú sa v nich hrany z $M$ a $L$, pričom hrana z $M$ spája
+stopky susedných kvetov. 
+Aby sme cesty v stromoch  mohli doplniť na alternujúce 
+cesty v grafe $G$, stačí si uvedomiť nasledujúce tvrdenie:
+
+\begin{lema}
+  \label{lm:1f:tmp1}
+  Nech $K$ je kvet, $u$ je jeho stopka  a $v$ je jeho ľubovoľný vrchol. Potom 
+  existuje alternujúca cesta v $G$ z $u$ do $v$, 
+  ktorá je celá obsiahnutá v $K$ a ak je neprázdna, tak začína hranou z $L$ a končí hranou z $M$.
+\end{lema}
+
+
+\begin{dokaz}
+  Indukciou na hĺbku vnorenia kvetu. Pre kvet s jedným vrcholom tvrdenie zrejme platí.
+  Nech teda je kvet $K$ tvorený kvetmi $K_1,\ldots,K_{2r+1}$, pričom stopka $K$ je v $K_1$.
+  Bez ujmy na všeobecnosti, nech $v\in K_{2t-1}$ pre nejaké $t$ (keby $v\in K_{2t}$, zmeníme
+  smer číslovania kvetov). 
+  Ak $t=1$, použijeme indukciu na kvet $K_1$. Nech teda $t>1$.
+  Z definície kvetu existuje hrana $(q,w)\in L$, kde $q\in K_1$ a
+  $w\in K_2$. Z indukcie existuje alternujúca $u-q$ cesta v $K_1$, ktorá končí hranou z $M$.
+  Zároveň existuje alternujúca cesta v $K_2$ zo stopky do $w$, ktorá končí hranou z $M$.
+  Spojením týchto ciest dostaneme alternujúcu cestu z $u$ do stopky $K_2$, ktorá končí hranou z $L$,
+  a teda sa dá predĺžiť do stopky $K_3$. Tento postup opakujeme, až kým cestu dostaneme do 
+  stopky kvetu $K_{2t-1}$ a odtiaľ opäť z indukčného predpokladu predĺžime cestu do $v$.
+\end{dokaz}
+
+
+\noindent
+S pomocou Lemy~\ref{lm:1f:tmp1} teraz vieme nájsť alternujúcu cestu medzi stopkou $K_{2r}$ a stopkou $H_{2q}$.
+Na tejto ceste vymeníme príslušnosť hrán medzi $L$ a $M$, čím zvýšime počet hrán v párovaní $M$.
+Stromy ${\cal T}_1$ a ${\cal T}_2$ následne ''rozoberieme'': kvety $K_{2i-1}$ a $K_{2i}$ (a rovnako
+$H_{2j-1}$ a $H_{2j}$) budú po výmene hrán na alternujúcej ceste tvoriť činky. Aby sme videli, prečo, 
+stačí si uvedomiť, že
+cesta z dôkazu Lemy~\ref{lm:1f:tmp1} pretína každý vnútorný kvet 
+buď ani raz, alebo dvakrát a to jednou hranou z $M$ a jednou z $L$.
+Preto  po výmene hrán z $M$ a $L$
+ostane zachovaná podmienka, že každú bublinu pretína práve jedna hrana z $M$ a stopka stromu sa presunie 
+do vrcholu $v$ z Lemy~\ref{lm:1f:tmp1}.
+Rovnako vytvoria činku kvety $K$ a $H$.
+Zvyšné časti stromov tvoria
+činky prirodzeným spôsobom.
+
+\begin{myfig}{\textwidth}{svg/edmonds8}
+\end{myfig}
+
+
+\noindent
+Celý algoritmus pracuje v cykle, v ktorom kým $M$ nie je 1-faktor, nájde najmenšie $\varepsilon$,
+ktoré poruší niektorú z podmienok {\bf(I1)},  {\bf(I2)} Lemy~\ref{lm:1f:opt}. Podľa toho, aká situácia
+nastala, vykoná jednu z akcií {\bf(P1)},  {\bf(P2)}, {\bf(P3)} alebo {\bf(P4)} a pokračuje v hlavnom cykle.
+Podmienka {\bf (I3)} ostáva splnená stále. Keď algoritmus skončí a $M$ je 1-faktor, žiaden kvet nemôže byť
+koreň stromu (jeho stopka by bola nespárovaná), preto všetky vrcholy sú pokryté činkami a platí aj podmienka
+{\bf (I4)}. Preto podľa Lemy~\ref{lm:1f:opt} po skončení algoritmu je $M$ minimálny 1-faktor.
+
+\noindent
+Ostáva nám ukázať, že algoritmus naozaj skončí a, pokiaľ možno aj to, že skončí rýchlo. Kľúčové je pri tom
+nasledovné pozorovanie:
+
+\begin{lema}
+  Popísaný algoritmus na riešenie problému \minfactor urobí maximálne $O(n^2)$ iterácií, kde $n$ je počet vrcholov
+  $G$.
+\end{lema}
+\begin{dokaz}
+  Počet hrán v $M$ nikdy neklesá a každé vykonanie akcie {\bf (P4)} ho o jednotku zväčší. Preto sa v celom algorime
+  vykoná $O(n)$ akcií  {\bf (P4)}. Na dôkaz tvrdenia stačí ukázať, že medzi dvoma vykonaniami  {\bf (P4)}
+  sa vykoná najviac $O(n)$ akcií  {\bf (P1)}, {\bf (P2)} a {\bf (P3)}.
+
+\noindent
+  Prvá vec, ktorú si všimneme, je, že v ktoromkoľvek okamihu je v celom algoritme $O(n)$ bublín (vrátane vnorených);
+  to vyplýva z toho, že kvet obsahuje aspoň tri vnútorné kvety, a teda ak si nazveme {\em hĺbkou } kvety maximálnu
+  úroveň do seba  vnorených bublín, 
+  tak kedykoľvek môže byť najviac $n$ kvetov hĺbky 0, $n/3$ kvetov hĺbky 1, $n/3^2$ kvetov
+  hĺbky $2$, atď., čo dáva geometrický rad.
+
+\noindent
+ Uvažujme teraz výpočet algoritmu medzi dvoma akciami {\bf (P4)}. Ďalšie dôležité pozorovanie je, že
+ vonkajšej bubline kvetu, ktorý je na párnej úrovni v nejakom strome, nikdy nebude náboj ubúdať (buď ostane na párnej
+ úrovni, alebo sa stane súčasťou inej bubliny na párnej úrovni v akcii {\bf(P3)}). Bublinu, ktorá sa niekedy
+ počas výpočtu vyskytovala ako vonkajšia bublina kvetu na párnej úrovni budeme volať {\em bezpečná}.
+ Na dôkaz tvrdenia stačí ukázať, že v akciách {\bf (P1)}, {\bf (P2)} a {\bf (P3)} pribúdajú bezpečné bubliny.
+ Keďže bezpečné bubliny sa nikdy nerozpadnú a všetkých bublín je lineárne veľa, dostaneme, že medzi dvoma
+ akciami {\bf (P4)} môže byť najviac lineárne veľa iterácií algoritmu.
+
+ \noindent
+ Akcia {\bf (P1)} rozbije bublinu $B$ na nepárnej úrovni a aspoň jedna bublina $B'$ 
+ z jej vnútra sa dostane na párnu úroveň.
+ $B'$ ale nemohla byť bezpečná, lebo bezpečná bublina sa nikdy nestane súčasťou bubliny na nepárnej úrovni.
+ Akcia {\bf (P2)} pridá novú bezpečnú bublinu z činky a akcia {\bf (P3)} vyrobí novú bezpečnú bublinu.
+\end{dokaz}
+
+
+\noindent
+Implementovať jednu iteráciu je možné priamočiaro v čase $O(nm)$, kde $n$ je počet vrcholov a $m$ je počet hrán:
+pre každú hranu prejdeme všetky bubliny a zistíme, aké veľké $\varepsilon$ nám dovoľuje. Vyberieme hranu
+s najmenším ohraničením a implementujeme príslušnú akciu. Teda môžme povedať
+
+\begin{veta}
+  Problém \minfactor je riešiteľný v čase $O(n^3m)$.
+\end{veta}
+
+\noindent
+Pre hĺbavého čitateľa poznamenáme, že s rafinovanejšími dátovými štruktúrami sa výsledný čas dá podstatne zlepšiť;
+nie je to však cieľom tohto textu.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection*{Relaxované podmienky komplementarity}
+
+
+\noindent
+V predchádzajúcej časti sme ukázali primárno-duálnu metódu založenú na charakterizácii
+optimálnych riešení pomocou podmienok komplementarity. Pre dvojicu duálnych programov
+
+\begin{eqnarray*}
+  (P):&\min\limits_{\bm{x}\in\R^n}\{\bm{c}\tr\bm{x}\mid A\bm{x}\ge\bm{b}, \bm{x}\ge 0\}\\
+  (D):&\max\limits_{\bm{y}\in\R^m}\{\bm{b}\tr\bm{y}\mid A\tr\bm{y}\le\bm{c}, \bm{y}\ge 0\}
+\end{eqnarray*}
+
+\noindent
+sú vektory $\bm{x}$ a $\bm{y}$ optimálnym riešením $(P)$ a $(D)$ práve vtedy, keď
+
+\begin{eqnarray*}
+  \forall\;1\le j\le n:\;{\rm\ buď\ }\; x_j=0\; {\rm\ alebo\ }\sum_{i=1}^ma_{ij}y_i=c_j\\
+  \forall\;1\le i\le m:\;{\rm\ buď\ }\; y_i=0\; {\rm\ alebo\ }\sum_{j=1}^na_{ij}x_j=b_i
+\end{eqnarray*}
+
+\noindent
+Môže nám táto charakterizácia pomôcť aj v situácii, keď máme skromnejší cieľ nájsť riešenie
+blízke optimu? Ukážeme, že keď sú podmienky komplementarity porušené iba ''trochu'',
+máme riešenia, ktoré sú ''blízko'' optimálnym. Vetu~\ref{thm:slackness} modifikujeme takto:
+
+\begin{framed}
+\begin{veta}
+  \label{thm:slacknessrelax}
+   Nech \bm{x} a \bm{y} sú prípustné riešenia úloh $(P)$ a $(D)$ a nech pre nejaké 
+   $\alpha,\beta\ge1$ platí
+
+\begin{eqnarray*}
+  \forall\;1\le j\le n:\;{\rm\ buď\ }\; x_j=0\; {\rm\ alebo\ }c_j/\alpha\le\sum_{i=1}^ma_{ij}y_i\le c_j\\
+  \forall\;1\le i\le m:\;{\rm\ buď\ }\; y_i=0\; {\rm\ alebo\ }b_i\le\sum_{j=1}^na_{ij}x_j\le\beta b_i
+\end{eqnarray*}
+
+\noindent
+Potom $\bm{c}\tr\bm{x}\le\alpha\beta\bm{b}\tr\bm{y}$.
+\end{veta}
+\end{framed}
+
+\begin{dokaz}
+  $$\sum_{j=1}^nc_jx_j\le\sum_{j=1}^n\alpha\left(\sum_{i=1}^ma_{ij}y_i\right)x_j
+  \le\alpha\sum_{i=1}^my_i\left(\sum_{j=1}^na_{ij}x_j\right)\le\alpha\beta\sum_{i=1}^my_ib_i
+  $$
+\end{dokaz}
+
+\noindent
+Typické použitie vyzerá takto: hľadáme najmenšie celočíselné riešenie $(P)$. Ak hocijakým algoritmom nájdeme
+celočíselné riešenie \bm{x} a k nemu nejaké \bm{y} spľňajúce podmienky Vety~\ref{thm:slacknessrelax} budeme
+mať situáciu
+
+\begin{myfig}{\textwidth}{svg/dualrelax}
+  $OPT$ aj nájdené riešenie $\bm{c}\tr\bm{x}$ ležia medzi $\bm{b}\tr\bm{y}$ a $\alpha\beta\bm{b}\tr\bm{y}$,
+  preto nájdené riešenie je nanajvýš $\alpha\beta$-násobok optima.
+\end{myfig}
+
+\noindent
+Ako konkrétny príklad navrhneme (opäť) 2-aproximačný algoritmus na problém \minvcover 
+(Definícia~\ref{dfn:minvcover}). Oproti algoritmu, ktorý sme už navrhli v časti o celočíselných programoch
+sa bude líšiť tým, že bude omnoho rýchlejší, lebo nebude potrebovať riešiť žiaden relaxovaný 
+lineárny program. Začiatok je rovnaký: chceme riešiť celočíselný porgram
+
+\edef\tmp{\theequation}
+
+\setcounterref{equation}{eq:ILP:1}
+\addtocounter{equation}{-1}
+
+
+\begin{equation}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{\sum\limits_{v\in V}\omega_vx_v}\\[3ex]
+  {\rm pri\ obmedzeniach} & x_u + x_v&\ge&1& \;\;\;\forall e=(u,v)\in E\\
+                          & x_v&\ge&0& \;\;\;\forall v\in V\\
+                          & x_v&\in&\Z
+\end{array}
+\end{equation}
+
+\noindent
+urobíme relaxovaný program:
+
+\begin{equation}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{\sum\limits_{v\in V}\omega_vx_v}\\[3ex]
+  {\rm pri\ obmedzeniach} & x_u + x_v&\ge&1& \;\;\;\forall e=(u,v)\in E\\
+                          & x_v&\ge&0& \;\;\;\forall v\in V\\
+\end{array}
+\end{equation}
+
+\setcounter{equation}{\tmp}
+
+\noindent
+Teraz ale namiesto toho, aby sme riešili (\ref{eq:ILP:2}), zostrojíme duálny program: 
+\begin{equation}
+  \label{eq:vcdual:1}
+\begin{array}{rrcll}
+  {\rm maximalizovať}     & \multicolumn{1}{l}{\sum\limits_{e\in E}y_e}\\[3ex]
+  {\rm pri\ obmedzeniach} & \sum\limits_{e\in E\atop e=(u,v)}y_e&\le&\omega_u& \;\;\;\forall u\in V\\[3ex]
+                          & y_e&\ge&0& \;\;\;\forall e\in E\\
+\end{array}
+\end{equation}
+
+\noindent
+Kým program (\ref{eq:ILP:1}) vyžaduje, aby sme vybrali vrcholy s najmenšou váhou tak, aby z koncových vrcholov
+každej hrany bol aspoň jeden vrchol vybratý, program (\ref{eq:vcdual:1}) môžme interpretovať tak, že
+každej hrane chceme priradiť nezáporný náboj $y_e$, pričom $\omega_v$ bude kapacita vrchola. 
+Cieľom je napumpovať do grafu čo najviac náboja, ale
+žiaden vrchol sa nesmie preťažiť: súčet nábojov incidentných hrán musí byť najviac kapacita vrchola.
+Napíšeme si podmienky komplementarity:
+
+$$\begin{array}{lrl}
+  {\bf S1} \;\;&\forall v\in V:\;\;&x_v>0\Rightarrow
+  \displaystyle\sum\limits_{e\in E\atop e=(u,v)}y_e=\omega_u\\[6ex]
+  {\bf S2} \;\;&\forall e=(u,v)\in E:\;\; & y_e>0\Rightarrow x_u+x_v=1
+\end{array}$$
+
+\noindent
+Z Vety~\ref{thm:slackness} vieme povedať toto: keby sme vedeli vybrať množinu vrcholov 
+(t.j. celočíselné hodnoty \bm{x})
+a dali hranám náboj tak, že žiaden vrchol nie je preťažený (prípustné duálne riešenie), každý vybratý
+vrchol je plný (podmienky {\bf S1}) a 
+z každej hrany s nenulovým nábojom je vybratý práve jeden vrchol (podmienky 
+{\bf S2}), mali by sme optimálne riešenie.
+Zjavne najväčší problém robí splnenie podmienky {\bf S2}. Ak si povieme, že sa o {\bf S2} vôbec nebudeme starať,
+určite bude platiť $x_u+x_v\le2$, preto budú splnené podmienky Vety~\ref{thm:slacknessrelax} pre $\alpha=1$ a 
+$\beta=2$.
+
+\noindent
+Zostrojíme jednoduchý greedy algoritmus: bude si pamätať množinu vybratých vrcholov $C$ a pre každú hranu 
+$e$ jej aktuálne priradený náboj $y_e$. Začne s tým, že $C=\emptyset$ a $y_e=0$ pre všetky $e$. Algoritmus bude 
+pracovať v cykle: kým $C$ netvorí pokrytie, vyberie ľubovoľnú nepokrytú hranu $e=(u,v)$ a zvýši $y_e$ na maximálnu
+hodnotu, ktorá nepreťaží vrchol $u$ ani $v$. Po tejto operácii je aspoň jeden z vrcholov $u$, $v$ plný (môžu
+byť aj obidva) a algoritmus ho pridá (ak sú plné obidva, pridá ľubovoľný z nich) do vytváraného pokrytia $C$.
+
+\noindent
+Po skončení algoritmu platí, že $C$ je pokrytie (hlavný cyklus skončil až keď každá hrana bola pokrytá),
+žiadny vrchol nie je preťažený a každý vybratý vrchol je plný (obe tieto podmienky sa udržiavajú v platnosti
+počas celého behu), a preto podľa predchádzajúcich úvah máme garantované, že nájdené riešenie je najviac
+dvojnásobok optima. Navyše algoritmus pracuje v čase $O(m+n)$, kde $n$ je počet vrcholov a $m$ je počet hrán.
+
+
+\subsection*{\minsforest}
+
+\noindent
+V tejto časti si ukážeme, ako využiť relaxované podmienky komplementarity aj v prípade, keď sú aj
+predpoklady Vety~\ref{thm:slacknessrelax} príliš silné. Zoberme si nasledovný zjednodušený modelový príklad:
+máme daný neorientovaný graf, ktorý reprezentuje železničnú sieť medzi mestami: vrcholy zodpovedajú mestám a hrany
+železničným tratiam. Dopravca, ktorý chce poskytovať prepravné služby, si musí 
+prenajať trate od vlastníka, pričom pre každú trať je daná cena za prenájom. Dopravca sa snaží prenajať
+trate tak, aby mohol splniť všetky svoje plánované spojenia a pritom zaplatil čo najmenej. Formálnejšie
+zapísané, chceme riešiť nasledovný problém:
+
+\begin{framed}
+  \begin{dfn}
+    Majme daný graf $G=(V,E)$ a ceny hrán $\omega:E\mapsto\R^+$. Ďalej je daná (symetrická) 
+    funkcia požadovaných spojení
+    $r:V\times V\mapsto\{0,1\}$. Cieľom problému \minsforest je vybrať množinu hrán $F\subseteq E$ tak, 
+    aby pre každú dvojicu vrcholov $u$, $v$ takú, že $r(u,v)=1$, existovala $u$-$v$ cesta používajúca iba hrany z 
+    $F$. Navyše požadujeme, aby celková cena hrán v $F$ bola najmenšia možná.
+  \end{dfn}
+\end{framed}
+
+
+\begin{myfig}{\textwidth}{ovl/steiner-06}
+  Príklad grafu s váhami hrán (modré). Požadované prepojenia sú $u-v$, $s-t$, $p-q$ a $x-z$ (t.j.
+  $r(u,v)=r(v,u)=r(s,t)=r(t,s)=r(p,q)=r(q,p)=r(x,z)=r(z,x)=1$ a ostatné hodnoty $r(\cdot,\cdot)$ sú 0).
+  Zvýraznené hrany tvoria optimálne riešenie, ktoré má cenu 51 a je tvorené tromi stromami 
+  (je dobré si uvedomiť, že komponenty súvislosti
+  optimálneho riešenia budú vždy stromy).
+\end{myfig}
+
+\noindent
+Pre čitateľa oboznámeného s \NP-úplnými problémami je jednoduchým cvičením ukázať, že problém
+\minsforest je \NP-ťažký, preto ani nebude očakávať, že prezentujeme algoritmus, ktorý ho optimálne rieši.
+Ukážeme 2-aproximačný algoritmus, t.j. ukážeme, že riešenie, ktoré algoritmus vráti nebude nikdy viac 
+ako dvojnásobok optima. Začneme tradične -- problém formulujeme ako celočíselný lineárny program. Celkom
+prirodzene pre každú hranu $e\in E$ zavedieme premennú $x_e\in\{0,1\}$, ktorá udáva, či je $e$ 
+vybratá do riešenia. Potrebujeme ešte sformulovať požiadavky na existenciu spojenia formou lineárnych
+ohraničení. Keďže sa chystáme použiť primárno-duálnu metódu, neostýchame sa použiť exponenciálne veľa
+obmedzení. Nejakú množinu $S\subseteq V$ nazveme {\em hladná}, ak 
+z nej musí vo výslednom riešení odchádzať nejaká hrana, t.j. ak existuje $u\in S$, $v\in V\setminus S$,
+kde $r(u,v)=1$. 
+Naša formulácia bude založená na tomto pozorovaní:
+
+\begin{lema}
+  Ak z každej hladnej množiny odchádza aspoň jedna vybratá hrana, potom vybraté hrany tvoria 
+  prípustné riešenie.
+\end{lema}
+
+\begin{dokaz}
+  Zoberme si ľubovoľné $u,v\in V$, také, že $r(u,v)=1$. Treba nájsť $u-v$ cestu z vybratých hrán.
+  Budeme indukciou konštruovať postupnosť množín $\{u\}=S_0\subseteq S_1\subseteq\cdots$ s tou vlastnosťou, že
+  pre každý vrchol $w\in S_i$ existuje $u-w$ cesta z vybratých hrán. 
+  Pre $\{u\}=S_0$ to zjavne platí. Zoberme si teraz nejakú množinu $S_i$. Ak $v\in S_i$, máme $u-v$ cestu
+  z vybratých hrán a skončíme dôkaz. Ak nie, $S_i$ je hladná a teda z nej odchádza vybratá hrana do nejakého vrchola 
+  $w\in V\setminus S$. Zoberme $S_{i+1}:=S\cup\{w\}$ a vlastnosť, že z $u$ existuje cesta z vybratých hrán do každého
+  vrchola z $S_{i+1}$, ostane zachovaná. Keďže vrcholov je $n$, 
+  a v každom kroku pridávame do $S_i$ jeden vrchol, časom musíme prísť do situácie, že $v\in S_i$.
+\end{dokaz}
+
+\noindent
+Označme $f(S)=1$, ak $S$ je hladná a $f(S)=0$ inak. Podľa Definície~\ref{dfn:edgeboundary} označme $\delta(S)$
+hranovú hranicu množiny $S$. Problém \minsforest môžeme zapísať nasledovným celočíselným programom:
+
+\begin{equation}
+  \label{eq:minsforest:ILP}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{\sum\limits_{e\in E}\omega_ex_e}\\[3ex]
+  {\rm pri\ obmedzeniach} & \sum\limits_{e\in\delta(S)}x_e&\ge&f(S)& \;\;\;\forall S\subseteq V\\
+                          & \multicolumn{3}{r}{x_e\in\{0,1\}}& \;\;\;\forall e\in E\\
+\end{array}
+\end{equation}
+
+\noindent ktorý následne relaxujeme tak, že $x_e\ge0$; podmienka $x_e\le1$ je splnená v každom minimálnom riešení,
+lebo nemá zmysel zobrať $x_e>1$. Dostaneme tak
+
+\begin{equation}
+  \label{eq:minsforest:P}
+\begin{array}{rrcll}
+  {\rm minimalizovať}     & \multicolumn{1}{l}{\sum\limits_{e\in E}\omega_ex_e}\\[3ex]
+  {\rm pri\ obmedzeniach} & \sum\limits_{e\in\delta(S)}x_e&\ge&f(S)& \;\;\;\forall S\subseteq V\\
+                          & x_e &\ge&0& \;\;\;\forall e\in E\\
+\end{array}
+\end{equation}
+
+\noindent
+K programu (\ref{eq:minsforest:P}) zostrojíme štandardným spôsobom duálny program: budeme mať premennú $y_S$ 
+pre každú množinu $S\subseteq V$ a zapíšeme
+
+\begin{equation}
+  \label{eq:minsforest:D}
+\begin{array}{rrcll}
+  {\rm maximalizovať}     & \multicolumn{1}{l}{\sum\limits_{S\subseteq V}y_sf(S)}\\[3ex]
+  {\rm pri\ obmedzeniach} & \sum\limits_{S:e\in\delta(S)}y_S&\le&\omega_e& \;\;\;\forall e\in E\\
+                          & y_S &\ge&0& \;\;\;\forall S\subseteq V\\
+\end{array}
+\end{equation}
+
+\noindent
+Programy s rovnakou štruktúrou sme tu už stretli niekoľkokrát a tak interpretácia bude celkom prirodzená:
+okolo každej množiny je bublina s nábojom. Cieľom je maximalizovať náboj na hladných množinách 
+(množiny, ktoré nie sú hladné majú nulový vklad do účelovej funkcie, a tak im nikdy nebudeme žiaden náboj prideľovať)
+tak, aby sme žiadnu hranu nepreťažili: súčet nábojov na bublinách, ktoré danú hranu pretínajú, musí byť najviac
+kapacita hrany. Podotýkame, že zvýšiť hodnotu $y_S$ je to isté, ako zvýšiť hodnotu
+$y_{V\setminus S}$ (lebo pretína tie isté hrany). Napíšme si ešte podmienky komplementarity:
+
+$$\begin{array}{lrl}
+  {\bf S1} \;\;&\forall e\in E:\;\;&x_e>0\Rightarrow
+  \displaystyle\sum\limits_{S:e\in\delta(S)}y_S=\omega_e\\[6ex]
+  {\bf S2} \;\;&\forall S\subseteq V:\;\; & y_S>0\Rightarrow \sum\limits_{e\in\delta(S)}x_e=f(S)
+\end{array}$$
+
+\noindent
+Z podmienok komplementarity vidíme, že ak by existovalo optimálne celočíselné riešenie, tak každá
+vybratá hrana by bola plná a z každej nenulovej bubliny okolo hladnej množiny by  odchádzala práve jedna hrana
+(z bublín okolo množín, ktoré nie sú hladné, nejde nič).
+
+\noindent
+Algoritmus, ktorý zostrojíme, 
+bude postupne vyberať hrany, až kým nebudú splnené všetky požiadavky na spojenia. Zároveň
+sa bude udržiavať invariant, že všetky vybraté hrany sú plné a žiadna hrana nie je preplnená.
+Preto keď algoritmus skončí, bude mať prípustné riešenie programu (\ref{eq:minsforest:P}) a
+prípustné riešenie programu (\ref{eq:minsforest:D}), ktoré zároveň spĺňajú podmienky {\bf S1}.
+Keby sme chceli použiť Vetu~\ref{thm:slacknessrelax} na dosiahnutie 2-aproximačného algoritmu,
+potrebovali by sme navyše zaručiť splnenie podmienok
+
+$$\begin{array}{lrl}
+  {\bf S2'} \;\;&\forall S\subseteq V:\;\; & y_S>0\Rightarrow \sum\limits_{e\in\delta(S)}x_e\le2f(S),
+\end{array}$$
+
+\noindent t.j. z každej nenulovej bubliny (okolo hladnej množiny) odchádzajú
+najviac dve vybraté hrany. Toto nebudeme schopní zaručiť, ale ako uvidíme
+neskôr, bude stačiť slabšie tvrdenie, že {\em v priemere} z nenulovej bubliny
+odchádzajú najviac dve vybraté hrany.
+
+\noindent Štruktúra algoritmu bude podobná ako pri algoritme pre \minvcover z
+minulej časti: začne s prázdnou množinou hrán a nulovými bublinami.  Kým ale
+algoritmus pre \minvcover v jednej iterácii vybral jednu duálnu premennú,
+zväčšil ju koľko sa dalo a z naplnených vrcholov vybral jeden, teraz algoritmus
+v jednej iterácii zvýši veľa duálnych premenných naraz a z naplnených hrán
+vyberie jednu do riešenia.
+
+\noindent
+Aké duálne premenné chceme zväčšovať? Určite musia zodpovedať hladným množinám (dohodli sme sa, že množinám,
+ktoré nie sú hladné, žiaden náboj nedávame). Zároveň, pretože všetky vybraté hrany sú plné, bublinu okolo
+hladnej množiny, z ktorej už odchádza vybratá hrana, nemôžeme zväčšiť. Zväčšovať teda môžeme bubliny okolo
+množín, ktoré sú {\em nespokojné}: sú hladné (t.j. vo výslednom riešení z nich musí odchádzať nejaká hrana), 
+ale zatiaľ z nich nijaká vybratá hrana neodchádza (inými slovami, sú to množiny, ktoré porušujú prípustnosť
+programu (\ref{eq:minsforest:P})).
+Nespokojných množín môže byť potenciálne veľa, ale jednoduché pozorovanie nám povie, že
+
+\begin{lema}
+Nespokojné množiny, ktoré sú minimálne vzhľadom na inklúziu, sú komponenty súvislosti podgrafu indukovaného
+doteraz vybratými hranami.
+\end{lema}
+
+\begin{dokaz}
+Množina je nespokojná, keď je hladná a neodchádza z nej vybratá hrana. Preto každá nespokojná množina je
+zjednotenie nejakých komponentov súvislosti grafu, indukovaného vybratými hranami.
+\end{dokaz}
+
+\noindent
+Algoritmus bude v každom kroku zväčšovať duálne premenné, ktoré zodpovedajú
+nespokojným komponentom súvislosti. Na začiatku nie sú vybraté žiadne hrany, a teda nespokojné komponenty
+súvislosti sú jednoprvkové množiny okolo vrcholov, ktoré potrebujú byť spojené. Pre zadanie z úvodného príkladu
+sú to množiny $\{u\},\{v\},\{s\},\{t\},\{p\},\{q\},\{x\},\{z\}$. 
+Algoritmus zväčšuje príslušné duálne premenné, až kým sa niektoré
+hrany nenaplnia. V našom prípade sa duálne premenné zvýšia na 1 a naplnia sa hrany $\{a,u\}$ a $\{t,p\}$.
+
+
+\begin{myfig}{\textwidth}{ovl/steiner-01}
+\end{myfig}
+
+
+\noindent
+V nasledujúcej iterácii sú nespokojné komponenty $\{a,u\},\{s\},\{v\},\{t,p\},\{q\},\{z\},\{x\}$ a 
+algoritmus zvýši ich hodnoty o 2, čím sa naplnia hrany $\{s,b\}$ a $\{g,z\}$, vzniknú nové nespokojné komponenty
+a výpočet pokračuje ako na nasledovných obrázkoch.
+
+
+\begin{minipage}[t]{0.5\textwidth}
+\vskip 0pt
+\begin{myfig}{\textwidth}{ovl/steiner-02}
+\end{myfig}
+\end{minipage}
+\begin{minipage}[t]{0.5\textwidth}
+\vskip 0pt
+\begin{myfig}{\textwidth}{ovl/steiner-03}
+\end{myfig}
+\end{minipage}
+
+
+
+%%%%%%%%%%%%%
+
+\begin{minipage}[t]{0.5\textwidth}
+\vskip 0pt
+\begin{myfig}{\textwidth}{ovl/steiner-04}
+\end{myfig}
+\end{minipage}
+\begin{minipage}[t]{0.5\textwidth}
+\vskip 0pt
+\begin{myfig}{\textwidth}{ovl/steiner-05}
+\end{myfig}
+\end{minipage}
+
+\noindent
+Algoritmus skončí, keď sú všetky komponenty súvislosti, tvorené vybratými hranami, spokojné.
+Z technických dôvodov nám bude príjemnejšie uvažovať, že v jednej iterácii sa vyberie iba jedna z 
+naplnených hrán. Ak sa naplnilo viacero hrán, nasledujúce iterácie zvýšia duálne premenné o nulovú hodnotu
+a postupne popridávajú potrebné hrany.
+
+\noindent
+Takto popísaný algoritmus má ešte jeden problém, a to, že nefunguje. 
+Ako príklad zoberme nasledovný graf, v ktorom je jediná požiadavka $r(u,v)=1$.
+
+\begin{minipage}[t]{0.4\textwidth}
+  \vskip 0pt
+\begin{myfig}{0.9\textwidth}{svg/steiner-badstar}
+\end{myfig}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{0.5\textwidth}
+  \vskip 0pt
+  \noindent
+  Na začiatku sú nespokojné komponenty $\{u\}$ a $\{v\}$ a algoritmus dá každému z nich hodnotu $1$. Tým sa ale
+  zaplnia hrany $\{z_i,u\}$, takže algoritmus nakoniec vyberie všetky hrany, a teda vyprodukuje riešenie
+  s cenou $\ell+3$,  ktoré ale nie je dobrá aproximácia optima s cenou $3$. Pokúsime sa náš algoritmus zachrániť
+  priamočiarou úpravou: po skončení algoritmu získané riešenie upravíme tak, že odstránime prebytočné hrany, 
+\end{minipage}
+
+
+\noindent
+  t.j.
+  hrany, po ktorých odobratí ostanú všetky požiadavky na spojenia splnené.
+  Výsledný algoritmus bude vyzerať takto:
+
+  \vskip 2ex
+\hrule
+  \begin{itemize}
+    \item[1] $F:=\emptyset$, $y_{\{v\}}:=0$ pre všetky $v\in V$
+    \item[2] kým existuje nespokojný komponent súvislosti indukovaný hranami z $F$
+      \begin{itemize}
+        \item[3] zvýš hodnoty $y_S$ pre všetky množiny $S$ zodpovedajúce nespokojným komponentom súvislosti
+          z $F$ tak, aby  sa naplnila nejaká hrana $e$
+        \item[4] $F:=F\cup e$
+      \end{itemize}
+    \item[5] $F':=F$
+    \item[6] pre každú hranu $e\in F$
+      \begin{itemize}
+        \item[7] ak $F-\{e\}$ je prípustné riešenie, $F':=F'-\{e\}$
+      \end{itemize}
+
+  \end{itemize}
+\hrule
+\vskip 3ex
+\noindent
+Najprv sa presvedčíme, že algoritmus je korektný:
+\begin{lema}
+  \label{lm:steiner:corr}
+  Po skončení algoitmu tvoria hrany $F'$ prípustné riešenie programu (\ref{eq:minsforest:ILP})
+  a hodnoty $y$ tvoria prípustné riešenie programu (\ref{eq:minsforest:D}).
+\end{lema}
+
+\begin{dokaz}
+Po skončení cyklu na riadku 2 neexistuje nespokojný komponent súvislosti tvorený hranami $F$. Pretože každá 
+nespokojná množina je zjednotením komponentov súvislosti tvorených $F$, z každej hladnej množiny odchádza 
+vybratá hrana, a teda $F$ je prípustné riešenie  (\ref{eq:minsforest:ILP}). Ešte sa treba presvedčiť, že
+riadky 6 a 7 túto vlastnosť neporušia. Hranu $e\in F$, pre ktorú platí, že $F-\{e\}$ je prípustné riešenie,
+nazveme {\em zbytočná}. Ukážeme, že keď z $F$ vyhodíme naraz všetky zbytočné hrany, dostaneme prípustné
+riešenie $F'$. Na to si treba uvedomiť, že hrany $F$ indukujú acylický graf: na riadku 3 vždy zvyšujeme
+hodnoty pre komponenty súvislosti, preto sa nikdy nenaplní hrana vo vnútri komponentu; každá naplnená hrana
+spája dva komponenty súvislosti, takže nevytvorí cyklus. Preto ak máme dva vrcholy $u$, $v$, ktoré
+musia byť spojené, t.j. $r(u,v)=1$, je v grafe indukovanom $F$ práve jedna cesta z $u$ do $v$, a všetky
+jej hrany sa preto ocitnú v $F'$.
+
+Na druhej strane, hodnoty $y_S$ sme vždy zvyšovali tak, aby sa žiadna hrana nepreplnila, takže počas celého 
+algoritmu tvoria prípustné riešenie  (\ref{eq:minsforest:D}).
+\end{dokaz}
+
+\noindent Vidíme, že po skončení algoritmu máme nejaké riešenie $F'$, a nejaké
+riešenie \bm{y} duálneho programu.  Na to, aby sme ohraničili aproximačný
+pomer, potrebujeme porovnať hodnotu riešenia $F'$ s hodnotou optima.  Tú
+nepoznáme, ale vieme, že je určite väčšia (alebo rovná) ako hocijaká prípustná
+hodnota duálneho programu.  Preto ak chceme dokázať, že algoritmus vždy vráti
+najviac dvojnásobok optima, stačí dokázať, že hodnota riešenia $F'$ je najviac
+dvojnásobok hodnoty \bm{y}, t.j.
+
+\begin{veta}
+  $$\sum_{e\in F'}\omega_e \le 2 \sum_{S\subseteq V}y_Sf(S)$$
+\end{veta}
+
+\begin{dokaz}
+  Pretože sa nikdy nezvyšovali hodnoty $y_S$ pre množinu $S$, ktorá nie je
+  hladná,  $f(S)=0$ implikuje  $y_S=0$, a teda chceme dokázať $$\sum_{e\in
+  F'}\omega_e \le 2 \sum_{S\subseteq V}y_S.$$ 
+  Zaveďme si teraz nasledovné označenie: pre nejaké množiny $W\subseteq E$ a $S\subseteq V$ 
+  označme  $\deg_W(S):=|W\cap\delta(S)|$, t.j. počet hrán z $W$, ktoré majú jeden koniec v $S$ a druhý mimo $S$.
+  Každá hrana, ktorú sme vybrali do
+  $F$ (a teda aj do $F'$) je plná (hodnoty $y$ nikdy neznižujeme, teda ak hrana
+  raz bola plná, je plná aj na konci), a preto na ľavej strane platí 
+  $$\sum_{e\in F'}\omega_e=\sum_{e\in F'}\left(\sum_{S:e\in\delta(S)}y_S\right)
+  =\sum_{S\subseteq V}\Deg_{F'}(S)y_S
+  .$$
+  Potrebujeme teda dokázať
+  \begin{equation}
+    \label{eq:sforest:1}
+    \sum_{S\subseteq V}\Deg_{F'}(S)y_S\le 2 \sum_{S\subseteq V}y_S
+  \end{equation}
+  Ukážeme to indukciou na počet iterácií algoritmu. Na začiatku
+  sú všetky hodnoty $y_S=0$, takže (\ref{eq:sforest:1}) triviálne platí. 
+  Uvažujme teraz iteráciu $\ell$, v ktorej sa na riadku 3 zvýšili $y_S$ pre všetky nespokojné komponenty
+  o hodnotu $\Delta$. Ako sa zmení (\ref{eq:sforest:1})? 
+  Pre každý nespokojný komponent $S$ pribudne  
+  na ľavej strane  $\Delta\Deg_{F'}(S)$
+  a na pravej $2\Delta$. Aby sme dokázali  (\ref{eq:sforest:1}), ukážeme, že na pravej strane pribudlo viac ako
+  na ľavej, t.j.
+  \begin{equation}
+     \label{eq:sforest:2}
+  \Delta\left(\sum_{S\in\S_\ell}\Deg_{F'}(S)\right)
+  \le 2\Delta|\S_\ell|,
+\end{equation}
+  kde $\S_\ell$ je množina všetkých nespokojných komponentov v tejto iterácii.
+  Nerovnosť  (\ref{eq:sforest:2}) sa dá napísať ako
+  $$\frac{\sum_{S\in\S_\ell}\Deg_{F'}(S)}{|\S_\ell|}\le2,$$
+  t.j. potrebujeme ukázať, že priemerný stupeň nespokojného komponentu vzhľadom na $F'$ je nanajvýš 2.
+  Označme $F_\ell$ množinu algoritmom vybratých hrán na začiatku iterácie $\ell$.
+  Situácia na začiatku iterácie vyzerá ako na obrázku:
+
+\begin{myfig}{0.8\textwidth}{svg/steiner1}
+Čierne hrany sú výsledné riešenie $F'$. Modré hrany sú 
+algoritmom doteraz vybraté hrany $F_\ell$. 
+Zvýraznené komponenty súvislosti $F_\ell$ sú nespokojné.
+\end{myfig}
+
+\noindent
+Hrany $F'$ aj $F_\ell$ sú podmnožiny hrán $F$. Pretože $F$ indukujú les (viď. dôkaz Lemy~\ref{lm:steiner:corr}),
+aj $F'\cup F_\ell$ tvoria les. Ak skontrahujeme každý komponent súvislosti $F_\ell$ do jedného vrchola (žlté
+oblasti v predchádzajúcom obrázku), dostaneme les $H$, ktorého vrcholy zodpovedajú komponentom súvislosti $F_\ell$ a
+hrany sú tvorené hranami $F'$. Dokázať nerovnosť   (\ref{eq:sforest:2}) znamená ukázať, že priemerný stupeň
+vrchola v $H$ je nanajvýš dva, pričom priemer je braný cez vrcholy, ktoré zodpovedajú nespokojným komponentom.
+Keby sa priemer bral cez všetky vrcholy, mohli by sme dôkaz skončiť: les s $n$ vrcholmi má najviac $n-1$ hrán,
+takže súčet stupňov vrcholov je najviac $2(n-1)$, a preto priemerný stupeň je menší ako 2. 
+Na to, aby sme ohraničili priemerný stupeň nespokojných komponentov ukážeme, že spokojné
+komponenty nemajú stupeň 1: buď sú izolované, alebo majú stupeň aspoň 2. 
+Keď to dokážeme, dôkaz dokončíme takto: žiaden nespokojný komponent nemá v $H$ stupeň 0, pretože
+z $F'$ z neho odchádza aspoň jedna hrana. Izolované vrcholy v $H$ preto všetky zodpovedajú spokojným komponentom.
+Keď z $H$ vyhodíme izolované vrcholy, dostaneme nový les $H'$: stačí nám ukázať, že priemerný stupeň 
+nespokojných komponentov v $H'$ je nanajvýš 2. Lenže priemerný stupeň všetkých komponentov je nanajvýš 2 a každý
+spokojný komponent má stupeň aspoň 2, takže priemerný stupeň nespokojných komponentov nemôže byť väčší ako 2.
+
+Na záver ukážeme, že spokojný komponent nemôže mať v $H$ stupeň 1. Predpokladajme sporom, že existuje
+komponent súvislosti $C$ v $F_\ell$, 
+z ktorého v $F'$ odchádza práve jedna hrana $e$. Hrana $e$ sa do $F'$ dostala preto,
+lebo nie je zbytočná, t.j. leží na jedinej ceste, ktorá v $F$ spája dva vrcholy $u$ a $v$, kde $r(u,v)=1$.
+Lenže  ak $e$ je jediná hrana, ktorá v $F'$ odchádza z $C$, potom vrcholy $u$ a $v$ musia ležať jeden v $C$
+a druhý mimo $C$, a preto $C$ nemôže byť spokojný v $F_\ell$.
+\end{dokaz}
+

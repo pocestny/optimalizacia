@@ -1,0 +1,327 @@
+Predpokladáme, že čitateľ pozná techniky návrhu efektívnych algoritmov a
+stretol sa s analýzou ich časovej zložitosti. Je tiež užitočné, ak má predstavu
+o základoch teórie zložitosti, aj keď nateraz nám bude stačiť, že za efektívne
+riešiteľné považujeme tie problémy, pre ktoré existuje polynomiálny algoritmus
+(t.j. algoritmus, ktorý pre každý vstup vráti správny výstup a jeho čas behu je
+ohraničený polynómom od veľkosti vstupu) a že existuje veľa problémov, pre
+ktoré žiaden takýto algoritmus nepoznáme. 
+
+V nasledujúcom texte pokračujeme z tohoto východiska. Budeme sa, až na zopár
+výnimiek, zaoberať problémami, pre ktoré nepoznáme polynomiálny algoritmus, a
+napriek tomu by sme ich chceli nejako efektívne riešiť. Prijmeme tézu, že 
+efektívne riešenie musí byť v polynomiálnom čase, a preto v ďalšom texte budeme,
+okrem prípadov, keď vyslovene povieme inak, za {\em algoritmus} považovať
+{\em algoritmus pracujúci v polynomiálnom čase}.
+Budeme skúmať jeden z možných
+prístupov: ak už nevieme spraviť algoritmus, ktorý vždy vráti
+správne riešenie, možno by sme sa dokázali uspokojiť s 
+algoritmom, ktorý vždy nájde ''takmer správne'' riešenie. Toto,
+samozrejme, závisí od typu problému.  Napr. pre rozhodovacie problémy (t.j.
+také, kde odpoveď je {\em áno} alebo {\em nie}) je každá odpoveď ''takmer
+správna''. Veľa zaujímavých problémov sú ale {\em optimalizačné problémy}.
+Neformálne, pre každý vstup optimalizačného problému existuje množina tzv. {\em
+prípustných riešení}. Navyše, každé prípustné riešenie má istú {\em mieru}
+(cenu alebo zisk). Cieľom je navrhnúť algoritmus, ktorý pre každý vstup nájde
+prípustné riešenie s optimálnou (minimálnou alebo maximálnou) mierou.
+Príkladom optimalizačného problému je problém batoha:
+
+\shorthandoff{-}  
+  \begin{framed}
+  \begin{dfn}
+    \label{dfn:knapsack}
+    Na vstupe je daných $n$ vecí s cenami $c_1,\ldots,c_n$ a objemami
+    $v_1,\ldots,v_n$ (pričom ceny aj objemy sú prirodzené čísla).  Takisto
+    je dané prirodzené číslo $B$, ktoré reprezentuje veľkosť batoha. Cieľom
+    prolému \knapsack je vybrať množinu vecí, ktoré sa zmestia do batoha a ich
+    cena je maximálna, t.j. nájsť množinu ${\cal I}\subseteq\{1,2,\ldots,n\}$
+    takú, že $\sum\limits_{i\in{\cal I}}v_i\le B$  a maximalizuje sa
+    $\sum\limits_{i\in{\cal I}}c_i$ spomedzi všetkých množín $\cal I$.
+  \end{dfn}
+\end{framed}
+
+Prípustné riešenia sú všetky výbery, ktoré sa zmestia do batoha, miera (zisk)
+riešenia je súčet cien vybratých vecí a cieľom je nájsť prípustné riešenie,
+ktoré maximalizuje zisk. \knapsack je príkladom problému, pre ktorý nepoznáme
+polynomiálny algoritmus. 
+
+Prvým pokusom v nami naznačenom smere  by mohlo byť navrhnúť algoritmus, ktorý
+vždy nájde prípustné riešenie s cenou najviac o konštantu menšou ako optimálne
+riešenie, t.j. chceme mať algoritmus \algA a konštantu $c$ tak,
+že pre každý vstup $x$, \algA nájde riešenie s cenou aspoň $\opt(x)-c$, kde
+$\opt(x)$ je cena optimálneho riešenia. O taktomto algoritme povieme, že má
+{\em absolútnu chybu} $c$.
+Po krátkej úvahe ale zistíme, že takto postavený cieľ je rovnako ťažký ako pôvodný.
+
+\begin{veta}
+  Ak existuje polynomiálny algoritmus pre \knapsack s absolútnou chybou $c$,
+potom existuje aj polynomiálny exakntý algoritmus.  
+\end{veta}
+
+\begin{dokaz}
+  Nech existuje taký algoritmus \algA s absolútnou chybou $c$. Zostrojíme
+  algoritmus $\algA'$, ktorý modifikuje daný vstup $x$ tak, že objemy vecí aj
+  veľkosť batoha ponechá, ale ceny prenásobí koeficientom $c+1$. Na takto
+  modifikovaný vstup $x'$ potom použije algoritmus \algA.  Ten vráti riešenie,
+  ktoré je prípustné pre $x'$ a má cenu aspoň $\opt(x')-c$. Lenže v $x'$ sú
+  ceny všetkých vecí násobky $c+1$, a teda jediná možná cena riešenia v
+  intervale $\pair{\opt(x')-c}{\opt(x')}$ je $\opt(x')$. Teda \algA musel nájsť
+  optimálne riešenie pre vstup $x'$. Vidno ale, že prípustné riešenia problémov
+  $x$ a $x'$ si jednoznačne zodpovedajú, preto máme aj optimálne riešenie pre
+  vstup $x$.
+\end{dokaz}
+
+Z predchádzajúceho dôkazu vidno, v čom je problém absolútnej chyby: ak máme
+úlohu, v ktorej sa cena všetkých prípustných riešení  dá rovnomerne "nafúknuť",
+vieme algoritmus s konštantnou absolútonu chybou prinútiť, aby našiel optimum.
+Túto ''nafukovaciu'' vlastnosť má veľa problémov, ktoré nás budú zaujímať, a
+preto až na niekoľko výnimiek nebudeme mať algoritmy s ohraničenou konštantou
+chybou. 
+
+\section*{Trieda \APX}
+
+Druhý prístup k meraniu chyby, ktorý je v praxi častý, je merať {\em relatívnu}
+chybu, t.j. o akú pomernú časť sme sa pomýlili. Formálne to docielime tak, že
+absolútnu chybu preškálujeme tak, aby sme dostali číslo z intervalu
+$\left\langle0,1)\right.$
+
+
+\begin{framed}
+  \begin{dfn}
+    Majme vstup $x$ a prípustné riešenie $y$  s cenou $c(y)$. Relatívna chyba riešenia $y$ je
+    \[{\cal E}(x,y) = \frac{ |\; \opt(x)-c(y) \;|}{\max\{\; \opt(x), \; c(y)\; \}} \]
+  \end{dfn}
+\end{framed}
+
+\noindent
+Predchádzajúca definícia je zapísaná tak, aby zahŕňala maximalizačné aj
+minimalizačné problémy, ale pre názornosť je lepšie si ju rozpísať zvlášť. Pre
+maximalizačné problémy je relatívna chyba 
+\[ {\cal E}_{\max}(x,y) = \frac{  \opt(x) - c(y) }{\opt(x)} = 1 - \frac{c(y)}{\opt(x)} \] 
+a pre minimalizačné
+problémy 
+\[ {\cal E}_{\min}(x,y) = \frac{ c(y) - \opt(x)  }{c(y)} = 1 -\frac{\opt(x)}{c(y)} \] 
+V oboch prípadoch vidno, že optimálny algoritmus vždy
+vráti riešenie s cenou $\opt(x)$, a preto relatívna chyba je $0$. Zároveň,
+pretože budeme uvažovať iba problémy s nezápornými cenami,  je relatívna chyba
+vždy menšia ako 1. Pre maximalizačné problémy má relatívnu chybu 1 triviálny
+algoritmus, ktorý vráti riešenie s hodnotou $0$ (horšie to pri nezáporných
+cenách nemôže byť); pre minimalizačné problémy sa relatívna chyba blíži k 1 pre
+algoritmus, ktorého cena riešenia sa blíži k $\infty$.  
+Aby sme predišli technickým problémom, budeme predpokladať, že $\max\{\; \opt(x), \; c(y)\; \}>0$.
+Ďalší patoogický prípad môže nastať, ak máme minimalizačný problém, ktorého optimum je 0, vtedy totiž
+každý algoritmus vracajúci kladné riešenie má relatívnu chybu 1. Namiesto toho, aby sme 
+v definícii takéto prípady ošetrili, ostaneme pri tejto jednoduchšej verzii a sľúbime si, že také
+problémy nebudeme študovať.
+Za ''{\em
+aproximovateľné}'' budeme považovať problémy, pre ktoré vieme navrhnúť
+algoritmus s ohraničenou relatívnou chybou:
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:APX}
+    Triedu \APX tvoria optimalizačné problémy, pre ktoré existuje polynomiálny algoritmus \algA a konštanta $\varepsilon$,
+    $0<\varepsilon<1$ taká, že na každom vstupe je relatívna chyba riešenia algoritmu \algA najviac $\varepsilon$.
+  \end{dfn}
+\end{framed}
+
+\noindent
+V niektorých prípadoch je pracovať s relatívnou chybou trochu ťažkopádne, a preto sa používa ekvivalentný pojem 
+{\em aproximačného pomeru}:
+\[{\cal R}(x,y) = \frac{1}{1-{\cal E}(x,y)}\]
+Rozpísané zvlášť pre maximalizačné a minimalizačné problémy:
+\begin{align*}
+  {\cal R}_{\max}(x,y) &= \frac{\opt(x)}{c(y)}&
+  {\cal R}_{\min}(x,y) &= \frac{c(y)}{\opt(x)}
+\end{align*}
+
+\noindent
+Vidíme, že aproximačný pomer je vždy aspoň 1 a optimálny algoritmus má aproximačný pomer 1. Algoritmus, ktorého aproximačný
+pomer je najviac $r$ budeme volať {\em $r$-aproximačný}. 
+Pre minimalizačné problémy to znamená, že vždy vráti riešenie, 
+ktorého cena je najviac $r$-násobkom optima, pre maximalizačné problémy vždy vráti riešenie, ktorého cena je aspoň
+$1/r$-násobok optima. Trieda \APX je teda tvorená problémami, pre ktoré existuje $r$-aproximačný algoritmus
+s konštantným $r$.
+
+\vskip 1ex\noindent
+Pozrime sa terz, či sa nám podarí navrhnúť aproximačný algoritmus z triedy \APX pre problém \knapsack. Máme teda dve úlohy:
+navrhnúť algoritmus a dokázať, že má konštantný aproximačný pomer. Druhá úloha je väčšinou ťažšia, lebo potrebujeme 
+porovnať riešenie nášho algoritmu s optimálnym riešením, ktoré nepoznáme. Ako ešte veľakrát v tomto texte uvidíme,
+jadrom dôkazu je nájsť prefíkaný spôsob, ako odhadnúť optimálne riešenie. V prípade problému batoha si môžme zobrať 
+modifikovaný problém, v ktorom povolíme veci krájať: z $i$-tej veci môžeme zobrať časť $\alpha_i$. Dostávame
+nasledovný problém
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:Qknapsack}
+    Na vstupe je daných $n$ vecí s cenami $c_1,\ldots,c_n$ a objemami
+    $v_1,\ldots,v_n$ (pričom ceny aj objemy sú prirodzené čísla).  Takisto
+    je dané prirodzené číslo $B$, ktoré reprezentuje veľkosť batoha. Cieľom
+    prolému \Qknapsack je nájsť racionálne čísla  $\alpha_1,\ldots,\alpha_n$ tak, aby
+       pre všetky $i$ platilo $0\le\alpha_i\le1$ a
+    \begin{enumerate}
+      \item $\sum\limits_{i}\alpha_iv_i\le B$
+      \item $\sum\limits_{i}\alpha_ic_i$ je maximálne možné
+    \end{enumerate}
+  \end{dfn}
+\end{framed}
+
+\noindent Riešenia problému \knapsack sú aj riešeniami problému \Qknapsack;
+tým, že veci môžme krájať sme množinu prípustných riešení rozšírili a optimálne
+riešenie sme možno zväčšili. Budeme hovoriť, že \Qknapsack je zvoľnením ({\em
+relaxáciou}) \knapsack. Zároveň je problém \Qknapsack ľahko riešiteľný greedy
+algoritmom $\alg{A_g}$, ktorý utriedi veci podľa jednotkovej ceny $c_i/v_i$ od
+najdrahšej po najlacnejšiu a ukladá ich do batoha (celé, t.j. s $\alpha_i=1$)
+kým sa zmestia. Z prvej veci, ktorá sa nezmestí, zoberie takú časť, aby bol
+batoh celkom zaplnený (samozrejme, ak sa do batoha zmestia všetky veci, tak
+vezme všetky). Je jednoduchým cvičením presvedčiť sa, že $\alg{A_g}$ je
+optimálny: k ľubovoľnému inému prípustnému riešeniu vieme nájsť lepšie tak, že
+v batohu vymeníme kúsok nejakej veci za rovnako veľký kúsok drahšej nezobratej
+veci.
+
+Rovnaký greedy algoritmus sa dá použiť aj na problém \knapsack (s tým, že do
+batoha ukladá veci, kým sa zmestia, a potom skončí), ale, žiaľ, nielen že
+nenájde optimum, ale ani dobrú aproximáciu: uvažujme napr. veci s cenami
+$1,1,\ldots,1,2^n-1$ a objemami $1,1,\ldots,1,2^n$, pričom batoh má veľkosť
+$B=2^n$. Greedy algoritmus zoberie všetky jednotkové veci (majú jednotkovú cenu
+1, kým posledná vec má jednotkovú cenu $1-1/2^n$) a skončí s riešením s cenou
+$n-1$, pretože posledná vec sa do batoha nezmestí.  Optimálne riešenie je ale
+zobrať poslednú vec, ktorá zaplní celý batoh, a zarobiť $2^n-1$. Aproximačný
+pomer greedy algoritmu je teda aspoň $(2^n-1)/(n-1)$, čo v žiadnom prípade nie
+je konštanta pre rastúce $n$.
+
+Urobme ešte zúfalý pokus na záchranu situácie: uvažujme algoritmus \algA, ktorý
+porovná riešenie získané greedy algoritmom a riešenie, ktoré zoberie jedinú vec
+s najväčšou cenou $c_{\max}$ (bez ujmy na všeobecnosti predpokladáme, že každá
+vec sa sama osebe do batoha zmestí, ináč ju hneď v predspracovaní vyhodíme) a
+vráti väčšie z tých dvoch. 
+
+V nasledujúcom dôkaze sa ukáže idea, ktorá sa neskôr bude v rôznych obmenách opakovať:
+optimálne riešenie relaxovaného problému (ktoré poznáme) použijeme ako horný odhad optima (ktoré nepoznáme).
+
+\begin{veta}
+  Algoritmus \algA je 2-aproximačný.
+\end{veta}
+
+\begin{proof}
+Potrebujeme ukázať, že pre každý vstup je aproximačný pomer algoritmu \algA najviac 2, t.j. že 
+vždy vráti riešenie s cenou aspoň $\opt/2$, kde \opt je hodnota optimálneho riešenia. 
+Majme veci utriedené podľa
+jednotkovej ceny a nech $j$ je index prvej veci, ktorá sa nezmestí celá do batoha, t.j. optimálne
+riešenie \Qknapsack má hodnotu $\sum_{i=1}^{j-1}c_i+\alpha c_j$ pre nejaké $\alpha$, $0<\alpha\le 1$.
+  Označme $\overline{c}_j=\sum_{i=1}^{j-1}c_i$.
+  Pretože \Qknapsack je relaxáciou \knapsack, je $\opt\le\overline{c}_j+\alpha c_j\le\overline{c}_j+c_j.$
+Rozlíšime dva prípady:
+
+\begin{itemize}
+\item Ak $\overline{c}_j\le c_j\le c_{max}$, máme $\opt\le2c_{max}$
+\item Ak $\overline{c}_j> c_j$, máme $\opt<2\overline{c}_j$
+\end{itemize}
+
+\noindent
+  Pretože riešenie, ktoré nájde algoritmus \algA má cenu $\max\{\overline{c}_j,c_{\max}\}$, je dôkaz hotový.
+
+\end{proof}
+
+\section*{Lepšie ako \APX: \PTAS a \FPTAS}
+
+V predchádzajúcej časti sme predstavili triedu \APX ako triedu
+''aproximovateľných'' problémov. Ako je to s praktickým využitím takýchto
+algoritmov? Problémom tu je slovíčko ''existuje konštanta'' z
+Definície~\ref{dfn:APX}. Podobne, ako polynomiálny algoritmus, ktorého čas je ohraničený polynómom $n^{234}$,
+aj aproximačný algoritmus, ktorý vždy vráti $856$-násobok optima, nie je v praxi použiteľný. Podobne, ako
+pri stupni polynómu, aj pri aproximačnom pomere je ťažké (a nepraktické) stanoviť konštantu, nad ktorou už
+príslušný aproximačný pomer nie je zaujímavý. Občas sa nám ale podarí tento problém obísť elegantne a navrhnúť
+tzv. {\em aproximačnú schému} (PTAS, polynomial-time approximation scheme):
+
+\begin{framed}
+  \begin{dfn}
+    \label{dfn:PTAS}
+    Triedu \PTAS tvoria optimalizačné problémy, 
+    pre ktoré pre každú fixnú konštantu $0<\varepsilon<1$
+    existuje polynomiálny algoritmus $\algA_\varepsilon$,
+    ktorý na každom vstupe vráti riešenie s relatívnou chybou najviac $\varepsilon$.
+  \end{dfn}
+\end{framed}
+
+Ako uvidíme o chvíľu, v tejto definícii je kľúčové, že $\varepsilon$ je fixná konštanta, t.j. čas algoritmu
+$\algA_\varepsilon$ musí byť
+polynomiálny od veľkosti vstupu, ale môže (aj nepolynomiálne) závisieť od $\varepsilon$. 
+Uvažujme problém \minpartition. V rozhodovacej verzii je  cieľom 
+zistiť, či sa prirodzené čísla zo vstupu dajú rozdeliť na dve časti s rovnakým súčtom. V optimalizačnej verzii
+sa budeme snažiť nájsť ''čo najpodobnejšie'' časti, pričom je niekoľko spôsobov, ako definovať ''čo najpodobnejšie''.
+Keby sme napríklad povedali, že chceme minimalizovať rozdiel väčšej a menšej časti, dostali by sme minimalizačný
+problém, ktorého optimum môže byť 0, a také sme si sľúbili neuvažovať. Zvoľme preto inú definíciu, v ktorej
+sa snažíme minimalizovať veľkosť väčšej časti:
+
+\begin{framed}
+  \begin{dfn}
+Na vstupe je daných $n$ prirodzených čísel $a_1,\ldots,a_n$. \'Ulohou 
+    problému \minpartition je nájsť rozklad množiny $\{1,\ldots,n\}$ 
+na dve dizjunktné množiny $Y_1,Y_2$ tak, 
+aby cena
+    \[\max\left\{\sum_{i\in Y_1}a_i,\sum_{i\in Y_2}a_i\right\}\]
+bola najmenšia možná.
+  \end{dfn}
+\end{framed}
+
+Podobne ako v predchádzajúcom príklade, lepšie sa nám bude pracovať s aproximačným pomerom namiesto relatívnej chyby.
+Naším cieľom bude pre ľubovoľné fixné $r>1$ navrhnúť $r$-aproximačný algoritmus. 
+Pretože každé riešenie má veľkosť aspoň $1/2\sum_{i=1}^na_i$, pre  $r\ge 2$ stačí vrátiť rozdelenie 
+$Y_1=\emptyset$, $Y_2=\{1,\ldots,n\}$. Predpokladajme preto, že $r<2$.
+Pozrime sa najprv na jednoduchý ''greedy'' algoritmus, ktorý utriedi čísla od najväčšieho po najmenšie, a potom
+postupne vždy pridáva do tej časti, ktorá je práve menšia. Ľahko vidno, že takýto algoritmus nemôže mať
+aproximačný pomer lepší ako $7/6$: pre vstup $3,3,2,2,2$, ktorého optimum je 6 ($3+3$, $2+2+2$), greedy
+algoritmus vráti rozdelenie $3+2$, $3+2+2$ s hodnotou 7.
+Budeme vychádzať z intuície, že najdôležitejšie je správne rozdeliť veľké čísla, lebo pri ich nesprávnom
+uložení vznikne väčšia chyba. Pri malých číslach, naopak, ani greedy algoritmus veci príliš nepokazí.
+Navrhnime preto nasledovný algoritmus \algA:
+
+\vskip 2ex
+\begin{algorithmic}[1]
+\State vstup: čísla $a_1\ge a_2\ge\cdots\ge a_n$, a $r$, $1<r<2$
+  \State\label{Alg:PTAS-Min-Partition:k}$k:=$ \faKey
+\State\label{Alg:PTAS-Min-Partition:1}nájdi optimálne riešenie $Y_1,Y_2$ pre $a_1,\ldots,a_k$
+\For {{$i=k+1$ to $n$}}
+  \State\label{Alg:PTAS-MinPartition:greedy}
+  pridaj $i$ do množiny $Y_\ell$ s menšou hodnotou $\sum\limits_{j\in Y_\ell}a_j$
+\EndFor
+\end{algorithmic}
+
+Algoritmus \algA prvých $k$ čísel rozloží optimálne (napr. preskúšaním všetkých $2^k$
+možností) a zvyšok dorobí greedy algoritmom. Kľúčom k riešeniu je vhodne zvoliť
+parameter $k$.  Pozrime sa, aký aproximačný pomer \algA dosahuje pri 
+zvolenom parametri $k$.  Zaveďme najprv niekoľko označení.  Nech
+$W_1=\sum_{j\in Y_1}a_j$ a $W_2=\sum_{j\in Y_2}a_j$. Bez ujmy na všeobecnosti
+predpokladajme $W_1>W_2$, takže \algA nájde riešenie s hodnotou $W_1$. 
+Ďalej nech $L=(W_1+W_2)/2$, t.j. $L$ je dolné
+ohraničenie optimálneho riešenia.
+Nech $h$ je maximálny index prvku v $Y_1$.
+
+Ak $h\le k$, tak všetky prvky sa do $Y_1$ dostali na riadku \ref{Alg:PTAS-Min-Partition:1} a v cykle
+na riadku
+\ref{Alg:PTAS-MinPartition:greedy} sa nepridá žiaden prvok.
+
+
+
+\IGNORE{
+Ak $h<k$ ľahko vidno, že algoritmus vrátil optimálne riešenie:
+$W_1$ je totiž optimálna hodnota pre podporoblém daného vstupu a preto je 
+dolným ohraničením každého riešenia celého vstupu.
+
+Nech teda $h\ge k$. Zjavne $W_1-x_h\le W_2$, pretože v okamihu, keď sa položil prvok $h$ do $Y_1$ bola $Y_1$ menšia ako $Y_2$
+a potom už pribúdali prvky iba do $Y_2$. Teda platí 
+$$W_1-\frac{x_h}{2}\le L$$
+Odhadnime teraz aproximačný pomer:
+$$\frac{W_1}{m^*(\bm{x})}\le\frac{W_1}{L}\le\frac{L+\frac{x_h}{2}}{L}=1+\frac{x_h}{2L}\le1+\frac{x_h}{x_h(k+1)}\le r$$
+Predposledná nerovnosť vyplýva z nasledujúceho pozorovania:
+keďže $h\ge k$, existuje aspoň $k+1$ prvkov veľkosti aspoň $x_h$. Lenže $2L$ je súče všetkých prvkov, preto
+$2L\ge x_h(k+1)$.
+%   $k:=\left\lceil\frac{2-r}{r-1}\right\rceil$
+}
+
+\section*{TODO: $FPTAS$ Knapsack, $O(\log n)$ aproximácia Set Cover}
+
+%\section*{Horšie ako \APX}
+%\begin{myfig}{0.55\textwidth}{svg/multicut}
+%Riešenie inštancie problému \minmulticut s celkovou cenou 12.
+%\end{myfig}

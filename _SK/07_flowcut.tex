@@ -1,0 +1,162 @@
+\section{\maxflow--\mincut očami duality}
+
+\noindent Dualita lineárneho programovania, ktorú sme predstavili v
+predchádzajúcej časti, často pomáha lepšie pochopiť min--max charakterizácie
+výpočtových problémov.  V tejto časti si z pohľadu duality priblížime známe
+tvrdenie, že veľkosť maximálneho toku sa rovná kapacite minimálneho rezu.
+
+
+\noindent
+Začneme tým, že predstavíme problém maximálneho toku. Keďže predpokladáme, že čitateľ
+sa s ním už stretol, odpustíme si tentokrát motivačné rozprávky a zopakujeme len definíciu. 
+Majme daný (neorientovaný) graf $G=(V,E)$ s nezápornými váhami hrán, t.j. 
+funkciou $c:E\mapsto\R^+$; namiesto $c(\{u,v\})$ budeme skrátene písať $c_{uv}=c_{vu}$.
+V grafe sú dva význačné vrcholy $s$ a $t$.
+V probléme \maxflow je cieľom nájsť čo najväčší tok z $s$ do $t$. Tok je funkcia 
+$f:V^2\mapsto\R^+$, ktorej interpretácia je taká, že $f(u,v)$ je množstvo kvapaliny, ktorá tečie
+z $u$ do $v$. Funkcia $f$ musí spĺňať tieto vlastnosti:
+\begin{enumerate}
+  \item ak $f(u,v)\not=0$, potom $(u,v)\in E$, t.j. tiecť musí po hranách grafu
+  \item $f(u,v)=-f(v,u)$, t.j. znamienko udáva, ktorým smerom tok ide
+  \item pre každé $v\not\in\{s,t\}$ platí $\sum\limits_{u\in V}f(u,v)=0$, t.j. čo do vrchola vteká, to z neho aj vytečie
+\end{enumerate}
+\noindent
+Veľkosť toku je $\sum_{v\in V}f(s,v)$. Rez v grafe $G$ je množina hrán, ktorej odobratie oddelí vrcholy $s$ a $t$.
+Cena rezu je súčet váh prerezaných hrán. Problém \mincut je nájsť rez minimálnej ceny. 
+Na nasledovnom obrázku je graf s kapacitami hrán a minimálnym rezom (vľavo) a maximálnym tokom 
+(vpravo; tmavo sú označené hrany, ktorých kapacita je naplnená tokom) s hodnotou 24.
+
+
+\begin{myfig}{\textwidth}{svg/flowcutNew}
+\end{myfig}
+
+
+\noindent
+Problém \maxflow sa dá prirodzene formulovať ako úloha lineárneho programovania, a to hneď niekoľkými
+spôsobmi. Z dôvodov, ktoré, ako dúfame, budú jasné na konci tejto časti, si zvolíme takúto 
+formuláciu: pre každú hranu $(u,v)\in E$ budeme mať dve nezáporné premenné $x_{uv}$ a $x_{vu}$, 
+ktoré budú udávať množstvo toku z $u$ do $v$ (všimnite si, že sme tým povolili situáciu, 
+že po tej istej hrane tečie tok oboma smermi: $x_{uv}$ v smere z $u$ do $v$ a $x_{vu}$ v
+smere z $v$ do $u$; ničmenej, tieto dve hodnoty stačí odčítať a dostaneme riešenie
+v zmysle našej definície). Ďalej budeme mať jednu premennú $f$, ktorá bude udávať veľkosť
+toku (a tú sa budeme snažiť maximalizovať): $f=\sum\limits_{u:(s,u)\in E}x_{su}-\sum\limits_{u:(s,u)\in E}x_{us}$. 
+Zákony zachovania toku aj obmedzenia kapacít  
+ľahko zapíšeme pomocou lineárnych nerovností a dostaneme program
+
+\begin{equation}
+  \label{eq:flow:1}
+  \begin{array}{rrcll}
+      {\rm maximalizovať}     & \multicolumn{1}{r}{f}\\[8mm]
+    {\rm pri\ obmedzeniach} & \sum\limits_{u:(s,u)\in E} x_{su} - \sum\limits_{u:(s,u)\in E} x_{us} - f  &=&0&  \\[6mm]
+                            & \sum\limits_{u:(t,u)\in E} x_{ut} - \sum\limits_{u:(s,u)\in E} x_{tu} + f  &=&0&  \\[6mm]
+                            & \sum\limits_{u:(u,v)\in E} x_{vu} - \sum\limits_{u:(u,v)\in E} x_{uv} &=&0&\;\;\;
+    \forall v\in V - \{s,t\}\\[6mm]
+    & x_{uv}&\le& c_{uv}&  \;\;\;\forall (u,v)\in E\\[1mm]
+    & x_{vu}&\le& c_{uv}&  \;\;\;\forall (u,v)\in E\\[1mm]
+                            & x_{uv}&\ge& 0 &  \;\;\;\forall (u,v)\in E\\
+  \end{array}
+\end{equation}  
+
+\noindent
+Prvé a druhé obmedzenie definujú veľkosť toku $f$ ako to, čo vyteká z $s$, resp. čo vteká do $t$. Vo všetkých
+ostatných vrcholoch platí zákon zachovania toku. 
+
+\noindent
+Použime teraz náš dualizačný recept a zostrojme k programu (\ref{eq:flow:1}) duálny minimalizačný program. 
+Každému obmedzeniu v primárnom programe zodpovedá premenná v duálnom programe.
+V programe (\ref{eq:flow:1}) máme dva druhy obmedzení: obmedzenia v tvare $\cdots = 0$ pre každý vrchol
+a obmedzenia $x_{uv}\le c_{uv}$. Zavedieme si preto duálne premenné $y_v\in\R$ pre každý vrchol $v\in V$
+($y_s$ zodpovedá prvému obmedzeniu, $y_t$ druhému a ostatné $y_v$ v poradí ďalším)
+a premenné $z_{uv}$ a $z_{vu}$ pre každú hranu $(u,v)\in E$, pričom $z_{uv},z_{vu}\ge0$.
+Duálny program sa vyrába tak, že $i$-ta duálna premenná je  multiplikátor, ktorým prenásobíme
+$i$-te obmedzenie a výsledky sčítame; súčet pravých strán je príslušný odhad a vyžadujeme, aby
+súčet ľavých strán bol v každej zložke väčší ako maximalizovaná funkcia.
+Súčet pravých strán je v našom prípade $\sum\limits_{(u,v)\in E}(z_{uv}+z_{vu})c_{uv}$.
+Maximalizovaná funkcia má pri všetkých premenných okrem $f$ hodnotu 0. 
+Premenná $f$ vystupuje iba v prvom a druhom obmedzení (\ref{eq:flow:1}), preto dostávame
+v duálnom programe obmedzenie $y_t-y_s=1$ (je jasné, že tok je nezáporný, ale formálne sme 
+v (\ref{eq:flow:1}) nevyžadovali, aby $f\ge0$). Každá premenná $x_{uv}$ sa vyskytuje v 
+dtroch obmedzeniach: v obmedzení zodpovedajúcom vrcholu $u$ s kladným znamienkom,  v obmedzení
+zodpovedajúcom vrcholu $v$ so záporným znamienkom a v obmedzení $x_{uv}\le c_{uv}$. Dostávame
+tak duálny program
+
+
+\begin{equation}
+  \label{eq:flow:2}
+  \begin{array}{rrcll}
+    {\rm minimalizovať}     & \multicolumn{1}{r}{\sum\limits_{(u,v)\in E}(z_{uv}+z_{vu})\,c_{uv}}\\[8mm]
+    {\rm pri\ obmedzeniach} & y_t - y_s  &=&1&  \\[3mm]
+                            & y_v - y_u + z_{uv} &\ge&0&\;\;\;    \forall (u,v)\in E \\[3mm]
+                            & y_u - y_v + z_{vu} &\ge&0&\;\;\;    \forall (u,v)\in E \\[3mm]
+                            & z_{uv},z_{vu}&\ge& 0 &  \;\;\;\forall (u,v)\in E\\
+  \end{array}
+\end{equation}  
+
+\noindent
+Z vety o dualite vieme, že programy (\ref{eq:flow:1}) a (\ref{eq:flow:2}) majú rovnakú hodnotu optima. 
+Ako môžme program (\ref{eq:flow:2}) interpretovať? 
+Bez ujmy na všeobecnosti môžme predpokladať, že aspoň jedna z dvojice premenných $z_{uv},z_{vu}$
+je nulová: jediné obmedzenia na $z_{uv}$ a $z_{vu}$
+sú $z_{uv}\ge y_u-y_v$ a $z_{vu}\ge y_v-y_u$. Zjavne aspoň jedna z hodnôt $y_u-y_v$ a $y_v-y_u$
+nie je kladná, a teda ak máme ľubovoľné prípustné riešenie, tak aspoň jednu z premenných 
+$z_{uv},z_{vu}$ môžme nastaviť na 0 a nezväčšíme hodnotu minimalizovanej funkcie. 
+Môžme si preto označiť $\bar{z}_{uv}=\max\{z_{uv},z_{vu}\}$; obmedzenia potom hovoria, že
+$\bar{z}_{uv}\ge|y_u-y_v|$ a z rovnakých dôvodov ako pred chvíľou môžeme bez ujmy na všeobecnosti
+predpokladať, že $\bar{z}_{uv}=|y_u-y_v|$. Môžme si predstaviť, že vrcholy grafu ukladáme 
+na priamku: vrchol $v$ je uložený v bode $y_v$, pričom, opäť bez ujmy na všeobecnosti, je $s$ uložený
+v bode 0 a $t$ v bode 1. $\bar{z}_{uv}$ je dĺžka hrany $(u,v)$ v našom uložení.
+Keď to zhrnieme, optimálne riešenie programu (\ref{eq:flow:2}) nám dá také uloženie vrcholov grafu na 
+úsečku dĺžky 1, že $s$ a $t$
+sú na krajoch a minimalizuje sa váhovaná dĺžka hrán.
+
+\begin{myfig}{0.9\textwidth}{svg/relaxcut}
+  Graf s váhami hrán a jedno z možných optimálnych riešení programu (\ref{eq:flow:2}):
+  $\bar{z}_{su}=\bar{z}_{vw}=\frac{1}{6}$, $\bar{z}_{sv}=\bar{z}_{uw}=\frac{1}{3}$,
+  $\bar{z}_{sw}=\bar{z}_{wt}=\frac{1}{2}$. Výsledná hodnota je
+  $$\sum_{(u,v)\in E}c_{uv}\bar{z}_{uv}=\frac{1}{6}+\frac{1}{3}+2\frac{1}{2}+\frac{1}{3}+\frac{1}{6}+4\frac{1}{2}=4.$$
+\end{myfig}
+
+\noindent
+Poďme teraz prepísať program (\ref{eq:flow:2}) do normálneho tvaru 
+$\max\{-\bm{c}\tr\bm{\beta}\mid A\bm{\beta}=0,\;\bm{\beta}\ge0\}$.
+Ku každej premennej $z_{uv}$ zavedieme premennú $\hat{z}_{uv}\ge 0$, aby sme získali
+obmedzenia tvaru \hbox{$y_v-y_u+z_{uv}-\hat{z}_{uv}=0$}.
+Ak vektor  $\bm{\beta}$  pozostáva zaradom z hodnôt 
+$y_s,y_t,y_{v_1},\ldots,z_{uv},z_{vu},\ldots,\hat{z}_{uv}.\hat{z}_{vu},\ldots$, 
+matica $A$ má takúto štruktúru:
+
+\begin{myfig}{0.8\textwidth}{svg/cutlp}
+\end{myfig}
+
+\noindent
+Nasledujúcu priamočiaru povinnú jazdu prenecháme na čitateľa:
+
+\begin{prob}
+  S pomocou viet \ref{thm:idTum} a \ref{thm:unimod} ukážte, že matica $A$ je TUM.
+\end{prob}
+
+
+\noindent
+Z Vety~\ref{thm:tumInteger} vyplýva, že existuje celočíselné optimálne riešenie programu (\ref{eq:flow:2}).
+To znamená, že všetky vrcholy majú $y_v\in\{0,1\}$ (t.j. sú uložené na niektorom konci úsečky)
+a každá hrana má dĺžku 0 alebo 1. Preto každá cesta z $s$ do $t$ musí obsahovať aspoň jednu hranu s dĺžkou $1$,
+a teda ak hrany dĺžky 1 z grafu odstránime, dostaneme rez, ktorý oddeľuje $s$ od $t$. Môžme teda povedať
+
+\begin{veta}[\maxflow-\mincut veta]
+  Veľkosť maximálneho toku sa rovná kapacite minimálneho rezu.
+\end{veta}
+\begin{dokaz}
+  Veľkosť maximálneho toku je optimum programu (\ref{eq:flow:1}), ktoré je rovnaké, ako optimum
+  programu (\ref{eq:flow:2}). Existuje celočíselné optimum programu (\ref{eq:flow:2}), a zároveň
+  je bijekcia medzi $s-t$ rezmi a celočíselnými riešeniami  (\ref{eq:flow:2}): celočíselnému riešeniu
+  (\ref{eq:flow:2}) prislúcha rez a každému rezu vieme prirodzeným spôsobom priradiť riešenie  (\ref{eq:flow:2}).
+\end{dokaz}
+
+\noindent
+Je dosť možné, že čitateľ možno pozná oveľa jednoduchší dôkaz tohto tvrdenia. Dôvod, prečo uvádzame tento dôkaz je
+(okrem toho, že chceme ilustrovať dualitu lineárnych programov) ten, že ukazuje dvojicu 
+\maxflow-\mincut ako špeciálny prípad všeobecnejších problémov; zároveň dáva nový pohľad na otázku, prečo
+rovnaký výsledok neplatí pre iné podobné problémy (ak napríklad máme viacero zdrojov a ústí a cieľom je
+maximalizovať tok rôznych komodít v spoločných potrubiach, máme duálany problém k problému
+\minmulticut z Definície~\ref{dfn:multicut}, avšak analogický výsledok neplatí) cez unimodularitu príslušných matíc.
+
