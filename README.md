@@ -1,0 +1,1 @@
+Rozpracované skriptá k optimalizačným algoritmom
