@@ -254,10 +254,10 @@ Ostáva nám ukázať, že takto získaný rez je naozaj dobrou aproximáciou. N
 
 \begin{myfig}{\textwidth}{svg/multicut4}
   Funkcia $F$ pre jeden vrchol $v$ z predchádzajúceho príkladu. Optimum je $\Psi=7$ a $k=22$.
-  Do vzdialenosti $\frac{2}{15}\approx 0.13$ je vnútro gule prázdne a veľkosť rezu
+  Do vzdialenosti $\frac{2}{15}\approx 0.13$ je vnútro gule obsahuje iba vrchol $v$ a veľkosť rezu
   je 3, preto pre $0\le\rho<\frac{2}{15}$ je $F_\rho(v)=\frac{3}{\frac{7}{22}+3\rho}$.
   Pre $\frac{2}{15}\le\rho<\frac{3}{15}=0.2$ vnútro gule obsahuje dva vrcholy a celú hranu dĺžky $\frac{2}{15}$;
-  veľkosť rezu je 4, preto na tomto intervale $F_\rho(v)=\frac{4}{\frac{7}{22}+\frac{2}{15}+2\rho+2(\rho-\frac{2}{15)}}
+  veľkosť rezu je 4, preto na tomto intervale $F_\rho(v)=\frac{4}{\frac{7}{22}+\frac{2}{15}+2\rho+2(\rho-\frac{2}{15})}
   \approx\frac{4}{0.18+4\rho}$. Ďalej až po vzdialenosť $\frac{5}{15}=\frac{1}{3}$ 
   vnútro obsahuje tri vrcholy a dve hrany s celkovým objemom $0.2$, pričom v reze je 5 hrán, atď.
 \end{myfig}
@@ -302,7 +302,7 @@ Ukážeme si, že to nie je možné. Zoberme si regulárny graf $G$, ktorý má 
 vrcholov a každý vrchol má stupeň $d\ge3$. Zvoľme si nejaký parameter $\alpha$ a uvažujme inštanciu
 \minmulticut na grafe $G$, kde všetky hrany majú váhu 1 a dvojice $s_i,t_i$, ktoré treba rozpojiť,
 sú všetky dvojice vrcholov vo vzdialenosti aspoň $\alpha$. Keď pre každú hranu $e$ zvolíme $x_e=\frac{1}{\alpha}$,
-dostaneme prípustné riešenie programu (\ref{LP:multicut:prog2}), a preto $m^\star_Q\le\frac{n}{\alpha}$.
+dostaneme prípustné riešenie programu (\ref{LP:multicut:prog2}), a preto $m^\star_Q\le\frac{|E|}{\alpha}$.
 Ukážeme teraz, ako docieliť, aby ľubovoľné celočíselné riešenie 
 malo veľkosť aspoň $n$. 
 Nech $M$ je optimálne celočíselné riešenie, t.j. množina hrán, ktorá rozpojí všetky vrcholy

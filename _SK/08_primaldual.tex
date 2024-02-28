@@ -121,7 +121,7 @@ najťažší 1-faktor v $G''$. Dostali sme sa tak k nasledovnej definícii:
     $e=(u,v)\in E$ má váhu $\omega_e\in\R^+$.  Problém \minfactor je 
     nájsť 1-faktor v $G$, pre ktorý je súčet váh hrán
     minimálny, t.j.
-    $\min_{E'}\sum_{e\in E'}\omega(e),$
+    $\min_{E'}\sum_{e\in E'}\omega_e,$
     kde minimum je brané cez všetky 1-faktory $E'$.\end{dfn}\end{framed}
 
 
@@ -145,7 +145,7 @@ hrana, čo priamočiaro zapíšeme
 \noindent
 Ak tento program relaxujeme a namiesto $x_e\in\{0,1\}$ budeme požadovať iba $x_e\ge0$ 
 (čitateľ si všimne, že $x_e\le1$ vyplýva z minimality), optimum už nemusí byť celočíselné. 
-V nasledujúcich odstavcoch predstavíme primárno-duálny prístup podľa Edmondsa \cite{Edmonds65}.
+V nasledujúcich odstavcoch predstavíme primárno-duálny prístup podľa Edmondsa \cite{Edmonds65} \FIXME{citat neexistuje}.
 Najprv ale ešte jedno označenie, ktoré nám zjednoduší zápis:
 
 \begin{dfn}[hranová hranica množiny]
@@ -191,7 +191,7 @@ Spôsob návrhu algoritmov, ktorý tu ukážeme, sa zvykne nazývať {\em primá
 \noindent
 Použime náš dualizačný recept a zostrojme duálny program k (\ref{eq:1f:P}).
 Duálny program bude maximalizačný a bude mať premennú pre každé obmedzenie. Máme dva typy
-obmedzení: pre vrcholy a pre množiny, takže si zavedieme duálne premenné $r_v\in R$ pre $v\in V$
+obmedzení: pre vrcholy a pre množiny, takže si zavedieme duálne premenné $r_v\in\R$ pre $v\in V$
 a premenné $w_S\in\R^+$ pre $S\in\S$.
 Každá primárna premenná  $x_e$ má vklad $x_e\omega_e$ do minimalizačnej funkcie a vyskytuje
 sa v dvoch obmedzeniach pre vrcholy (konkrétne pre dva koncové vrcholy $e$) a v obmedzeniach
@@ -234,7 +234,7 @@ Z obmedzení programu (\ref{eq:1f:P}) vyplýva, že modrá suma $\sum_{e\in\delt
 
 $$\begin{array}{lrl}
   {\bf S1} (\clubsuit) \;\;&\forall e=(u,v)\in E:\;\;&x_e>0\Rightarrow r_u + r_v +
-  \displaystyle\sum\limits_{S\in\S\atop e\in\delta(S)}w_S=\omega(e)\\[6ex]
+  \displaystyle\sum\limits_{S\in\S\atop e\in\delta(S)}w_S=\omega_e\\[6ex]
   {\bf S2} (\diamondsuit)\;\;&\forall S\in\S:\;\; & w_S>0\Rightarrow \displaystyle\sum\limits_{e\in\delta(S)}x_e=1
 \end{array}$$
 
@@ -248,7 +248,7 @@ využívať iba systémy do seba zapadajúcich bublín. Program (\ref{eq:1f:D}) 
 že chceme maximalizovať celkový náboj. Váhy hrán si teraz vieme predstaviť ako kapacitu a obmedzenia
 hovoria, že žiadnu hranu $e$ nesmieme ''pretrhnúť'': celkový náboj na všetkých bublinách, ktoré pretínajú
 $e$ nesmie prekročiť jej kapacitu. 
-Hranu $e$, pre ktorú platí $ r_u + r_v + \sum_{S\in\S\atop e\in\delta(S)}w_S=\omega(e)$, nazveme {\em plná}.
+Hranu $e$, pre ktorú platí $ r_u + r_v + \sum_{S\in\S\atop e\in\delta(S)}w_S=\omega_e$, nazveme {\em plná}.
 Podmienky {\bf S1} a {\bf S2} spolu s vetou o dualite vieme interpretovať takto:
 
 \begin{lema}
@@ -310,7 +310,7 @@ hrana je plná, a preto jej koncové bubliny sa nemôžu zväčšiť, a zárove�
 \end{myfig}
 
 \noindent
-Okrem voľných bublín a činiek vznikol ďalší útvar: cesta dĺžky 3 zložená z hrany z $L$ a hrany z $M$;
+Okrem voľných bublín a činiek vznikol ďalší útvar: cesta dĺžky 2 zložená z hrany z $L$ a hrany z $M$;
 cesty, na ktorých sa striedajú hrany z $L$ a $M$ budeme volať {\em alternujúce}.
 Keď sa v ďalšom bude voľným bublinám pridávať náboj $+\varepsilon$, bublinám z alternujúcej cesty
 sa bude striedavo pridávať $+\varepsilon$ a $-\varepsilon$, aby sa žiadna hrana nepreplnila (pripomíname,
