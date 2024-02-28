@@ -32,7 +32,7 @@ Príkladom optimalizačného problému je problém batoha:
     Na vstupe je daných $n$ vecí s cenami $c_1,\ldots,c_n$ a objemami
     $v_1,\ldots,v_n$ (pričom ceny aj objemy sú prirodzené čísla).  Takisto
     je dané prirodzené číslo $B$, ktoré reprezentuje veľkosť batoha. Cieľom
-    prolému \knapsack je vybrať množinu vecí, ktoré sa zmestia do batoha a ich
+    problému \knapsack je vybrať množinu vecí, ktoré sa zmestia do batoha a ich
     cena je maximálna, t.j. nájsť množinu ${\cal I}\subseteq\{1,2,\ldots,n\}$
     takú, že $\sum\limits_{i\in{\cal I}}v_i\le B$  a maximalizuje sa
     $\sum\limits_{i\in{\cal I}}c_i$ spomedzi všetkých množín $\cal I$.
@@ -48,13 +48,13 @@ Prvým pokusom v nami naznačenom smere  by mohlo byť navrhnúť algoritmus, kt
 vždy nájde prípustné riešenie s cenou najviac o konštantu menšou ako optimálne
 riešenie, t.j. chceme mať algoritmus \algA a konštantu $c$ tak,
 že pre každý vstup $x$, \algA nájde riešenie s cenou aspoň $\opt(x)-c$, kde
-$\opt(x)$ je cena optimálneho riešenia. O taktomto algoritme povieme, že má
+$\opt(x)$ je cena optimálneho riešenia. O takomto algoritme povieme, že má
 {\em absolútnu chybu} $c$.
 Po krátkej úvahe ale zistíme, že takto postavený cieľ je rovnako ťažký ako pôvodný.
 
 \begin{veta}
   Ak existuje polynomiálny algoritmus pre \knapsack s absolútnou chybou $c$,
-potom existuje aj polynomiálny exakntý algoritmus.  
+potom existuje aj polynomiálny exaktný algoritmus.  
 \end{veta}
 
 \begin{dokaz}
@@ -72,7 +72,7 @@ potom existuje aj polynomiálny exakntý algoritmus.
 
 Z predchádzajúceho dôkazu vidno, v čom je problém absolútnej chyby: ak máme
 úlohu, v ktorej sa cena všetkých prípustných riešení  dá rovnomerne "nafúknuť",
-vieme algoritmus s konštantnou absolútonu chybou prinútiť, aby našiel optimum.
+vieme algoritmus s konštantnou absolútnou chybou prinútiť, aby našiel optimum.
 Túto ''nafukovaciu'' vlastnosť má veľa problémov, ktoré nás budú zaujímať, a
 preto až na niekoľko výnimiek nebudeme mať algoritmy s ohraničenou konštantou
 chybou. 
@@ -108,7 +108,7 @@ algoritmus, ktorý vráti riešenie s hodnotou $0$ (horšie to pri nezáporných
 cenách nemôže byť); pre minimalizačné problémy sa relatívna chyba blíži k 1 pre
 algoritmus, ktorého cena riešenia sa blíži k $\infty$.  
 Aby sme predišli technickým problémom, budeme predpokladať, že $\max\{\; \opt(x), \; c(y)\; \}>0$.
-Ďalší patoogický prípad môže nastať, ak máme minimalizačný problém, ktorého optimum je 0, vtedy totiž
+Ďalší patologický prípad môže nastať, ak máme minimalizačný problém, ktorého optimum je 0, vtedy totiž
 každý algoritmus vracajúci kladné riešenie má relatívnu chybu 1. Namiesto toho, aby sme 
 v definícii takéto prípady ošetrili, ostaneme pri tejto jednoduchšej verzii a sľúbime si, že také
 problémy nebudeme študovať.
@@ -156,7 +156,7 @@ nasledovný problém
     Na vstupe je daných $n$ vecí s cenami $c_1,\ldots,c_n$ a objemami
     $v_1,\ldots,v_n$ (pričom ceny aj objemy sú prirodzené čísla).  Takisto
     je dané prirodzené číslo $B$, ktoré reprezentuje veľkosť batoha. Cieľom
-    prolému \Qknapsack je nájsť racionálne čísla  $\alpha_1,\ldots,\alpha_n$ tak, aby
+    problému \Qknapsack je nájsť racionálne čísla  $\alpha_1,\ldots,\alpha_n$ tak, aby
        pre všetky $i$ platilo $0\le\alpha_i\le1$ a
     \begin{enumerate}
       \item $\sum\limits_{i}\alpha_iv_i\le B$
@@ -305,7 +305,7 @@ na riadku
 
 \IGNORE{
 Ak $h<k$ ľahko vidno, že algoritmus vrátil optimálne riešenie:
-$W_1$ je totiž optimálna hodnota pre podporoblém daného vstupu a preto je 
+$W_1$ je totiž optimálna hodnota pre podproblém daného vstupu a preto je 
 dolným ohraničením každého riešenia celého vstupu.
 
 Nech teda $h\ge k$. Zjavne $W_1-x_h\le W_2$, pretože v okamihu, keď sa položil prvok $h$ do $Y_1$ bola $Y_1$ menšia ako $Y_2$
@@ -314,7 +314,7 @@ $$W_1-\frac{x_h}{2}\le L$$
 Odhadnime teraz aproximačný pomer:
 $$\frac{W_1}{m^*(\bm{x})}\le\frac{W_1}{L}\le\frac{L+\frac{x_h}{2}}{L}=1+\frac{x_h}{2L}\le1+\frac{x_h}{x_h(k+1)}\le r$$
 Predposledná nerovnosť vyplýva z nasledujúceho pozorovania:
-keďže $h\ge k$, existuje aspoň $k+1$ prvkov veľkosti aspoň $x_h$. Lenže $2L$ je súče všetkých prvkov, preto
+keďže $h\ge k$, existuje aspoň $k+1$ prvkov veľkosti aspoň $x_h$. Lenže $2L$ je súčet všetkých prvkov, preto
 $2L\ge x_h(k+1)$.
 %   $k:=\left\lceil\frac{2-r}{r-1}\right\rceil$
 }

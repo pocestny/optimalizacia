@@ -124,9 +124,9 @@ $\pi\in{\cal P}_{s_i,t_i}$. Namiesto explicitnej podmienky $\sum_{e\in\pi}x_e\ge
 vrcholu $v$ potenciál $p_v^{(i)}\in\R$ tak, že $p_{t_i}^{(i)}-p_{s_i}^{(i)}\ge1$. Každej ceste 
 $\pi: s_i=v_1,v_2,\ldots,v_z=t_i$
 prislúcha postupnosť potenciálov vrcholov $p_{v_1}^{(i)},p_{v_2}^{(i)},\ldots,p_{v_z}^{(i)}$. Ak 
-vynútime, aby dľžka kaťdej hrany cesty bola aspoň rozdiel potenciálov, t.j.
+vynútime, aby dĺžka každej hrany cesty bola aspoň rozdiel potenciálov, t.j.
 $x_{(v_j,v_{j+1})}\ge p_{v_{j+1}}^{(i)}-p_{v_j}^{(i)}$, budeme mať zaručené, 
-že celá cesta bude mať dĺžku aspoň jednaa.
+že celá cesta bude mať dĺžku aspoň jedna.
 Namiesto programu  (\ref{LP:multicut:prog2}) nám teda stačí riešiť polynomiálne veľký program
 
 \begin{equation}
@@ -272,7 +272,7 @@ najviac do $\Psi$, a teda $m\le2\ln(2k)2\Psi$.
 \vskip 4pt
 \noindent
 Dôkaz dokončíme dôkazom tvrdenia (\ref{eq:cut1}): Fixujme si vrchol $v$ a uvažujme všetky funkcie
-ako funckie vzdialenosti $\rho$. Ak $V(\rho)$ je diferencovateľná, platí
+ako funkcie vzdialenosti $\rho$. Ak $V(\rho)$ je diferencovateľná, platí
 $V'(\rho)=C(\rho)$. Preto
 $$F(\rho)=\frac{V'(\rho)}{V(\rho)}=\left[\ln V(\rho)\right]'$$
 Tvrdenie (\ref{eq:cut1}) dokážeme sporom: predpokladajme, že pre všetky $\rho<1/2$ platí 
@@ -289,7 +289,7 @@ spojitosti a výsledky sčítame.
 
 \vskip 2ex
 \noindent
-Predcchádzjúce úvahy môžme zhrnúť do tvrdenia:
+Predchádzjúce úvahy môžme zhrnúť do tvrdenia:
 \begin{veta}
   Existuje algoritmus, ktorý pre problém \minmulticut vráti v polynomiálnom čase riešenie s veľkosťou
   nanajvýš $4\ln(2k)$-násobku optima.
@@ -418,10 +418,10 @@ a zo zvyšku vyrobíme menší lineárny program, na ktorom celý postup opakuje
 \noindent
 Ukážeme si túto techniku na príklade.
 Predstavme si typografickú firmu, ktorá má k dispozícii rôzne tlačiarne s rôznymi technológiami.
-Firma dostane zakázku, ktorá pozostáva z niekoľkých úloh. Každá úloha sa potenciálne dá vytlačiť na 
+Firma dostane zákazku, ktorá pozostáva z niekoľkých úloh. Každá úloha sa potenciálne dá vytlačiť na 
 rôznych tlačiarňach, s rôznym časom spracovania a nákladmi (napríklad čiernobiely text sa dá tlačiť na 
 offsetovej tlačiarni, alebo laserovej tlačiarni, alebo aj na farebnom plotri -- tam to bude ale dlho trvať
-a bude to drahé). Zakázka má na spracovanie časový limit a cieľom je naplánovať úlohy na tlačiarne tak, aby sa
+a bude to drahé). Zákazka má na spracovanie časový limit a cieľom je naplánovať úlohy na tlačiarne tak, aby sa
 stihol termín a zároveň náklady boli čo najmenšie. To nás vedie k nasledujúcej formulácii:
 
 \vbox{
@@ -456,7 +456,7 @@ je ekvivalentné známemu \NP-úplnému problému \probname{Min-Partition}\footn
   treba rozhodnúť, či existuje partícia $A=B\uplus C$ taká, že $\sum_{x\in A}x=\sum_{x\in B}x$.
 }.
 Neočakávame preto, že by sme ho vedeli efektívne riešiť. Ukážeme riešenie trochu jednoduchšej úlohy.
-Povedzme, že naša typografická firma pri prevzatí zakázky sľúbila dodaciu dobu ''{\em 5 až 10 dní}''.
+Povedzme, že naša typografická firma pri prevzatí zákazky sľúbila dodaciu dobu ''{\em 5 až 10 dní}''.
 Budeme sa snažiť riešiť úlohu s termínom $T=5$ dní, ale ak ho trochu zmeškáme, nič zlé sa nestane, kým
 to nebude viac ako 10 dní. Algoritmus, ktorý ukážeme, bude myslený na práve takúto situáciu.
 Bude riešiť problém \mingap s tým, že nájde
