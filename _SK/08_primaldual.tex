@@ -312,9 +312,9 @@ hrana je plná, a preto jej koncové bubliny sa nemôžu zväčšiť, a zárove�
 \noindent
 Okrem voľných bublín a činiek vznikol ďalší útvar: cesta dĺžky 2 zložená z hrany z $L$ a hrany z $M$;
 cesty, na ktorých sa striedajú hrany z $L$ a $M$ budeme volať {\em alternujúce}.
-Keď sa v ďalšom bude voľným bublinám pridávať náboj $+\varepsilon$, bublinám z alternujúcej cesty
+Keď sa v ďalšom kroku bude voľným bublinám pridávať náboj $+\varepsilon$, bublinám z alternujúcej cesty
 sa bude striedavo pridávať $+\varepsilon$ a $-\varepsilon$, aby sa žiadna hrana nepreplnila (pripomíname,
-že na rozdiel od zelených bublín, modré bubliny môžu mať záporný náboj). V ďalšom sa naplní hrana
+že na rozdiel od zelených bublín, modré bubliny môžu mať záporný náboj). V ďalšom kroku sa naplní hrana
 medzi dvoma bublinami, ktorým sa náboj pridáva, a môžu tak vznikať stromy z alternujúcich ciest
 (tzv. {\em maďarské stromy}). Ak naplnenou hranou vznikne alternujúca cesta s nepárnym počtom hrán,
 je to dobré, lebo sa môže zväčšiť párovanie tak, že na tejto ceste sa vymení príslušnosť hrán medzi $M$ a $L$
@@ -412,7 +412,7 @@ a ten bude mať jedného syna $H_2$ (na párnej úrovni).
 Nech $W$ je najbližší spoločný predok $K$ a $H$. Keďže $W$ má aspoň dvoch synov, musí byť tiež na párnej úrovni.
 Nech $K,K_1,\ldots,K_{2k+1},W$ a $H,H_1,\ldots,H_{2r+1},W$ sú cesty v strome. Z parity vrcholov vyplýva, že
 ich môžme obaliť novou bublinou a dostaneme kvet $Z$ na párnej úrovni, ktorého stopka je stopka $W$. Synovia
-$Z$ budú všetci synovia zahrnutých kvetov -- títo ostanú na nepárnej úrovni.
+$Z$ budú všetci synovia zahrnutých kvetov -- títo ostanú na nepárnej úrovni. \FIXME{aku hodnotu bude mat nova bublina?}
 \begin{myfig}{0.8\textwidth}{svg/edmonds7}
 \end{myfig}
 
@@ -498,6 +498,7 @@ nasledovné pozorovanie:
   úroveň do seba vnorených bublín, 
   tak kedykoľvek môže byť najviac $n$ kvetov hĺbky 0, $n/3$ kvetov hĺbky 1, $n/3^2$ kvetov
   hĺbky $2$, atď., čo dáva geometrický rad.
+  \FIXME{co znamena do seba vnorenych bublin? neviem mat bublinu hlbky 2 iba z 3 vrcholov (bublina hlbky 1 a 2 vrcholy) co by mi davalo n/(1+2h) kvetov hlbky h}
 
 \noindent
  Uvažujme teraz výpočet algoritmu medzi dvoma akciami {\bf (P4)}. Ďalšie dôležité pozorovanie je, že

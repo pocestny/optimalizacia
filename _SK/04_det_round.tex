@@ -273,7 +273,7 @@ najviac do $\Psi$, a teda $m\le2\ln(2k)2\Psi$.
 \noindent
 Dôkaz dokončíme dôkazom tvrdenia (\ref{eq:cut1}): Fixujme si vrchol $v$ a uvažujme všetky funkcie
 ako funkcie vzdialenosti $\rho$. Ak $V(\rho)$ je diferencovateľná, platí
-$V'(\rho)=C(\rho)$. Preto
+$V'(\rho)=C(\rho)$ (porovnajte $C(\rho)$ a členy $V(\rho)$ ktoré sú závislé od $\rho$). Preto
 $$F(\rho)=\frac{V'(\rho)}{V(\rho)}=\left[\ln V(\rho)\right]'$$
 Tvrdenie (\ref{eq:cut1}) dokážeme sporom: predpokladajme, že pre všetky $\rho<1/2$ platí 
 $F(\rho)>2\ln(2k)$. Ak $F$ je diferencovateľná na intervale $(0,1/2)$, máme
@@ -668,8 +668,11 @@ Algoritmus na riešenie problému \mingap bude vyzerať nasledovne
 
 \noindent
 Každá iterácia cyklu na riadku 2 zmenší hodnotu $|E|+|J|+|M'|$, preto algoritmus po polynomiálnom počte
-iterácií skončí. Ľahko vidno, že po skončení je každá úloha priradená nejakému procesoru. Ostáva nám ukázať,
-že toto priradenie má optimálnu cenu a termín je prekročený najviac o dvojnásobok:
+iterácií skončí. Ľahko vidno, že po skončení je každá úloha priradená nejakému procesoru.
+
+Čo môže byť výstupom algoritmu? Povedzme, že pre nejaký problém \mingap je pre $T=10$ minimálna dosiahnuťelná cena $OPT=100$ a pre $T=20$ zase $OPT=70$. Keď pustíme algoritmus pre $T=10$, môže sa stať, že dostaneme riešenie s cenou $ALG=97$ ktoré na dokončenie potrebuje čas $T=16$.
+
+Ostáva nám ukázať, že toto priradenie má optimálnu cenu a termín je prekročený najviac o dvojnásobok:
 
 \begin{veta}
 Uvedený algoritmus vyrieši v polynomiálnom čase problém \mingap. Nájdené riešenie má optimálnu cenu

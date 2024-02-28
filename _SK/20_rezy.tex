@@ -182,7 +182,7 @@ nech $T=(V,E)$ je strom a $e\in E$ je hrana. Po jej odstránení dostaneme graf 
 má dva komponenty súvislosti. Označme $cut_T(e)\subseteq V$  
 jeden\footnote{Aby sme mali jednoznačnú definíciu, potrebujeme povedať, ktorý komponent vyberieme.
   Keďže ale budeme hovoriť o veľkosti rezu medzi komponentami, 
-  je nám to jedno. Napríklad nech $cut_T(e)$ je menší z komponentov $T-\{e\}$
+  je nám to jedno. Napríklad nech $cut_T(e)$ je menší z komponentov $T-\{e\}$ \FIXME{nestaci vzdy ten co obsahuje $v_0$?}
   a v prípade rovnosti $cut_T(e)$ je 
 ten komponent $T-\{e\}$, ktorý obsahuje nejaký pevne zvolený fixný vrchol $v_0$.}
 z nich. 
@@ -314,7 +314,7 @@ Na to, aby sme ukázali opačnú nerovnosť, t.j. $\omega'(e_{\min})\le  f_G(u,v
   $f(v_2,v_z)\le f(v_1,v_z)$, spor.
 \end{dokaz}
 
-Teraz vieme, že $f_G(u,v)\ge\min\{f_G(w_0,w_1),f_G(w_1,w_2),\ldots,f_G(v_{z-1},w_z)\}.$
+Teraz vieme, že $f_G(u,v)\ge\min\{f_G(w_0,w_1),f_G(w_1,w_2),\ldots,f_G(w_{z-1},w_z)\}$ (kde vrcholy $w_i$ tvoria $u-v$ cestu).
 Zároveň, pretože $(w_i,w_{i+1})\in E'$, z predchádzajúcich úvah vieme, že 
 $f_G(w_i,w_{i+1})=\omega'((w_i,w_{i+1}))$, a teda
 $$f_G(u,v)\ge\min\{\omega'(w_0,w_1),\ldots,\omega'(w_{z-1},w_z)\}=\omega'(e_{\min}).$$
