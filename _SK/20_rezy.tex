@@ -1,5 +1,5 @@
 V doterajšom texte sme si predstavili rôzne spôsoby, ako využiť optimalizačné metódy pri návrhu aproximačných
-algoritmov. V nasledujúcch dvoch kapitolách si priblížime niektoré známe problémy a \ldots
+algoritmov. V nasledujúcich dvoch kapitolách si priblížime niektoré známe problémy a \ldots
 
 
 Problém nájdenia minimálneho rezu v grafe, \mincut, by mal byť čitateľom dobre známy:
@@ -182,7 +182,7 @@ nech $T=(V,E)$ je strom a $e\in E$ je hrana. Po jej odstránení dostaneme graf 
 má dva komponenty súvislosti. Označme $cut_T(e)\subseteq V$  
 jeden\footnote{Aby sme mali jednoznačnú definíciu, potrebujeme povedať, ktorý komponent vyberieme.
   Keďže ale budeme hovoriť o veľkosti rezu medzi komponentami, 
-  je nám to jedno. Napríklad nech $cut_T(e)$ je menší z komponentov $T-\{e\}$
+  je nám to jedno. Napríklad nech $cut_T(e)$ je menší z komponentov $T-\{e\}$ \FIXME{nestaci vzdy ten co obsahuje $v_0$?}
   a v prípade rovnosti $cut_T(e)$ je 
 ten komponent $T-\{e\}$, ktorý obsahuje nejaký pevne zvolený fixný vrchol $v_0$.}
 z nich. 
@@ -250,7 +250,7 @@ Gomory-Hu strom pre graf $G$.
 Počas behu algoritmu bude platiť nasledovný invariant:
 
 \begin{framed}
-{\bf Invariant:} Nech $e\in E^{(t)}$ je ľubovoľná hrana v strome $T^{(t)}$, $e=\left(S_i^{(t)},S_J^{(t)}\right)$,
+{\bf Invariant:} Nech $e\in E^{(t)}$ je ľubovoľná hrana v strome $T^{(t)}$, $e=\left(S_i^{(t)},S_j^{(t)}\right)$,
 potom $cut_{T^{(t)}}(e)$ je množina krabíc v jednom komponente $T^{(t)}-\{e\}$. Nech $M$
 sú vrcholy grafu $G$ z týchto krabíc, t.j. $M:=\{v\in V\mid \exists S\in cut_{T^{(t)}}(e):\;v\in S\}$.
 Potom existujú dvaja {\em svedkovia} $x\in S_i^{(t)}$, $y\in S_j^{(t)}$, že $\omega'(e)=f_G(x,y)$ a 
@@ -314,7 +314,7 @@ Na to, aby sme ukázali opačnú nerovnosť, t.j. $\omega'(e_{\min})\le  f_G(u,v
   $f(v_2,v_z)\le f(v_1,v_z)$, spor.
 \end{dokaz}
 
-Teraz vieme, že $f_G(u,v)\ge\min\{f_G(w_0,w_1),f_G(w_1,w_2),\ldots,f_G(v_{z-1},w_z)\}.$
+Teraz vieme, že $f_G(u,v)\ge\min\{f_G(w_0,w_1),f_G(w_1,w_2),\ldots,f_G(w_{z-1},w_z)\}$ (kde vrcholy $w_i$ tvoria $u-v$ cestu).
 Zároveň, pretože $(w_i,w_{i+1})\in E'$, z predchádzajúcich úvah vieme, že 
 $f_G(w_i,w_{i+1})=\omega'((w_i,w_{i+1}))$, a teda
 $$f_G(u,v)\ge\min\{\omega'(w_0,w_1),\ldots,\omega'(w_{z-1},w_z)\}=\omega'(e_{\min}).$$
@@ -477,7 +477,7 @@ cykly aj násobné hrany.
 Vyhoďme z $T'$  hrany tak, aby ostal strom $T''$  a zakoreňme ho v $C_k$.
 Pre každý vrchol $C_i$, $i=1,\ldots,k-1$ zoberme hranu $e'_{h_i}$, 
 ktorá ide k jeho rodičovi v $T''$; dostali sme $k-1$ hrán z $T$. Ukážeme, že $\omega'(e'_{h_i})\le\partial_G(C_i)$,
-čím sa celý dôkaz skonči.
+čím sa celý dôkaz skončí.
 Hrana $e'_{h_i}=(u,v)$ má jeden koncový vrchol v $C_i$ a druhý mimo $C_i$. $\omega'(e'_{h_i})$ je cena
 minimálneho $u-v$ rezu v $G$. Ale $C_i$ tiež oddeľuje $u$ od $v$, a preto $\omega'(e'_{h_i})\le\partial_G(C_i)$.
 

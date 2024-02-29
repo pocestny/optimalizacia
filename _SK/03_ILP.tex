@@ -173,7 +173,7 @@ pri obmedzeniach
 \end{align*}
 
 \noindent Inou v praxi dôležitou vlastnosťou celočíselných lineárnych programov
-je schopnosť otpimalizovať nelineárne účelové funkcie.  Predpokladajme, že v
+je schopnosť optimalizovať nelineárne účelové funkcie.  Predpokladajme, že v
 predchádzajúcom príklade namiesto funkcie $f(x,y)=x+y$ chceme maximalizovať
 funkciu $f(x,y)=\varphi(x+y)$, kde funkcia $\varphi$ je zložená z lineárnych
 úsekov:
@@ -503,7 +503,7 @@ $$C=\left(\begin{array}{c|c}A'&0\\\hline X&I_\ell\end{array}\right)$$
 
 \begin{dosl}
   Každý lineárny program tvaru $$\max\{\bm{c}\tr\bm{x}\mid A\bm{x}\le\bm{b},\;\bm{x}\ge\bm{0}\}$$ alebo
-  $$\max\{\bm{c}\tr\bm{x}\mid A\bm{x}\le\bm{b},\;\bm{x}\ge\bm{0}\},$$ kde \bm{b} je celočíselný vektor a $A$ je
+  \FIXME{tie vzorce boli identicke} kde \bm{b} je celočíselný vektor a $A$ je
    \begin{enumerate}
      \item matica incidencie neorientovaného bipartitného grafu, alebo
      \item matica incidencie orientovaného grafu\footnote{matica, ktorá má riadok pre každý vrchol a stĺpec pre každú orientovanú hranu, pričom v stĺpci prislúchajúcom hrane $(v_i,v_j)$ je
@@ -653,7 +653,7 @@ $2\bm{\omega}\tr\bm{x}$, máme zaručené, že jeho váha je najviac $2\opt$.
 \noindent Najjednoduchší spôsob, ako z \bm{x} dostať celočíselné riešenie je
 zaokrúhliť hodnoty $x_v$. Vieme, že všetky $x_v\ge 0$ a takisto bez ujmy na
 všeobecnosti $x_v\le 1$ (v optimálnom riešení nemá zmysel mať hodnotu $x_v>1$:
-keby to tak bolo, nastavením $x_v=1$ sa hodnota $\omega_vx_v$ nezväčšíi a
+keby to tak bolo, nastavením $x_v=1$ sa hodnota $\omega_vx_v$ nezväčší a
 všetky obmedzenia ostanú splnené), preto zaokrúhlenie vlastne znamená vybrať
 tie vrcholy, pre ktoré $x_v\ge\frac{1}{2}$.  Najprv si treba uvedomiť, že
 riešenie, ktoré takto dostaneme, je prípustné: ak v pôvodnom riešení platilo
@@ -860,7 +860,7 @@ celočíselnému optimu. Zároveň má veľa položiek celočíselných, takže 
 (pre $d\approx3$ je optimalizačný pomer $\approx1.01$, t.j. chyba je $1\%$, 
 pri $d\approx5$ je chyba cca $8\%$). Ako stúpa hustota, pribúda neceločíselných položiek v relaxovanom riešení
 a tým sa zväčšuje rozdiel medzi celočíselným a relaxovaným optimom, aj medzi relaxovaným optimom a 
-zaokrúhlením. Pri očakávanom stupni cca 15 začne byť relaxovaé riešenie zložené takmer zo samých $\frac{1}{2}$,
+zaokrúhlením. Pri očakávanom stupni cca 15 začne byť relaxované riešenie zložené takmer zo samých $\frac{1}{2}$,
 takže zaokrúhlením sa získa dvojnásobok; zároveň ale stúpa celočíselné optimum, takže aproximačný faktor
 postupne klesá. Vidíme teda, že aj pre jednoduchý algoritmus, ktorý má garantovaný aproximačný pomer 2, 
 existujú triedy vstupov, kde dosahuje oveľa lepší pomer.

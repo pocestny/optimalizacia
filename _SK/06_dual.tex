@@ -7,7 +7,7 @@ jeho podstatnou vlastnosťou, ktorá sa bude dať tiež mnohostranne využiť pr
 algoritmov. Tou vlastnosťou je tzv. {\em dualita}. 
 Predpokladajme, že Róbert chce  nájsť minimum funkcie 
 $$f(x_1,x_2,x_3):=10x_1+3x_2+5x_3$$ 
-spomedzi takých hodnôt $x_1, x_2, x_3$, ktoré sp\'lňajú
+spomedzi takých hodnôt $x_1, x_2, x_3$, ktoré spĺňajú
 \begin{eqnarray}
 \label{LP_001}6x_1 + \phantom{2}x_2 - \phantom{3}x_3&\ge&2\\
 \label{LP_002}2x_1 + 2x_2 + 6x_3&\ge&8\\
@@ -32,7 +32,7 @@ je po zložkách menšia ako funkcia $f$, lineárna kombinácia pravých strán 
 Aby poskytla čo najlepší argument, Angela vlastne rieši lineárny program:
 nájsť maximum funkcie
 $$g(y_1,y_2,y_3):=2 y_1+8 y_2+30 y_3$$
-spomedzi takých hodnôt $y_1, y_2, y_3$, ktoré sp\'lňajú
+spomedzi takých hodnôt $y_1, y_2, y_3$, ktoré spĺňajú
 \begin{eqnarray*}
 6y_1 + 2y_2 + 6y_3 &\le& 10\\
 y_1 + 2y_2 + 3y_3 &\le& 3\\
@@ -125,17 +125,17 @@ Podobne, ako keď sme odvodzovali normálny tvar lineárneho programu, mohli by
 sme nahradiť $x_1 = z_1 - z_2$, $z_1,z_2\ge0$ a dostali by sme primárnu úlohu
 minimalizovať
 $$f(z_1,z_2,x_2,x_3):=10z_1-10z_2+3x_2+5x_3$$ 
-spomedzi takých hodnôt $z_1, z_2, x_2, x_3$, ktoré sp\'lňajú
+spomedzi takých hodnôt $z_1, z_2, x_2, x_3$, ktoré spĺňajú
 \begin{eqnarray}
-\label{LP_001}6z_1 -6z_2 + \phantom{2}x_2 - \phantom{3}x_3&\ge&2\\
-\label{LP_002}2z_1 -2z_2 + 2x_2 + 6x_3&\ge&8\\
-              6z_1 -6z_2 + 3x_2 + 5x_3&=&30\nonumber\\
+6z_1 -6z_2 + \phantom{2}x_2 - \phantom{3}x_3&\ge&2\\
+2z_1 -2z_2 + 2x_2 + 6x_3&\ge&8\\
+6z_1 -6z_2 + 3x_2 + 5x_3&=&30\nonumber\\
 z_1,z_2,x_2,x_3&\ge&0\nonumber
 \end{eqnarray}
 Príslušná duálna úloha by bola
 nájsť maximum funkcie
 $$g(y_1,y_2,y_3):=2 y_1+8 y_2+30 y_3$$
-spomedzi takých hodnôt $y_1, y_2, y_3$, ktoré sp\'lňajú
+spomedzi takých hodnôt $y_1, y_2, y_3$, ktoré spĺňajú
 \begin{eqnarray*}
 6y_1 + 2y_2 + 6y_3 &\le& 10\\
 -6y_1 - 2y_2 - 6y_3 &\le& -10\\
@@ -227,7 +227,7 @@ bodmi $z_1\bm{a_1}+\cdots+z_n\bm{a}_n$,
 
 
 \begin{dokaz}
-  Označme $K$ množinu všetkých   konvexných kobniácií bodov $\bm{a_1},\ldots,\bm{a_n}$.
+  Označme $K$ množinu všetkých konvexných kombinácií bodov $\bm{a_1},\ldots,\bm{a_n}$.
   Ľahko sa overí, že $K$
   je konvexné teleso: pre konvexné kombinácie  $\sum z_i\bm{a_i}$ a $\sum z'_i\bm{a_i}$ je
   aj $t\sum z_i\bm{a_i} + (1-t)\sum z'_i\bm{a_i} = \sum (tz_i+(1-t)z'_i)\bm{a_i}$ konvexná kombinácia,
@@ -306,7 +306,7 @@ pre dva a tri rozmery úplne zjavné:
   $\bm{a_1},\ldots,\bm{a_n}$. Potom platí:
   \begin{itemize}
     \item 
-      Ak \bm{x} je vo vnútri\footnote{t.j. $K$ obsahuje \bm{x} aj nejaké jeho malé okolie} $K$,
+      Ak \bm{x} je vo vnútri \FIXME{footnote sa neukazuje} \footnote{t.j. $K$ obsahuje \bm{x} aj nejaké jeho malé okolie} $K$,
       potom neexistuje nadrovina $\cal H$, ktorá prechádza cez \bm{x} a všetky body z $K$
       ležia na jednej strane $\cal H$.
     \item 
@@ -319,6 +319,7 @@ pre dva a tri rozmery úplne zjavné:
 \begin{dokaz}
   Prvá časť je ľahká: nech \bm{x} leží vo vnútri $K$ nech existuje taká nadrovina $\cal H$, že všetky body z $K$
   sú na jednej strane $\cal H$. Pretože $\bm{x}$ je vo vnútri $K$, existuje nejaký bod $\bm{x'}\in K$, ktorý leží
+  \FIXME{nechapem ako mozu vsetky x \in K lezat na jednej strane a zaroven x' \in K lezat na druhej strane}
   na opačnej strane $\cal H$ ako všetky body z $K$, špeciálne ako body $\bm{a_i}$. 
   Lenže polpriestor ohraničený $\cal H$, ktorý obsahuje 
   všetky $\bm{a_i}$ je konvexné teleso, a preto z definície konvexného obalu $\bm{x'}\not\in K$.
@@ -341,7 +342,7 @@ Majme fixovaný  bod \bm{x} a pre body $\bm{y}\in K$ uvažujme euklidovskú vzdi
   Nech $\cal H$ je nadrovina tvorená bodmi \bm{y}, pre ktoré $\pair{\bm{t}}{\bm{y}}=\kappa$.
   Zjavne $\bm{x}\in{\cal H}$. Platí
   $$0\le\sum_{i=1}^m(x_i-z_i)^2=%\sum_{i=1}^mx_i^2-2x_iz_i+z_i^2=
-  \bpair{x}{x}-2\bpair{x}{z}-\bpair{z}{z}$$
+  \bpair{x}{x}-2\bpair{x}{z}+\bpair{z}{z}$$
   a preto
   \begin{align*}&\bpair{t}{z}=\pair{\bm{x}-\bm{z}}{\bm{z}}=\bpair{x}{z}-\bpair{z}{z}\le\\
                 &\le\bpair{x}{x}-\bpair{x}{z}=\pair{\bm{x}-\bm{z}}{\bm{x}}=\bpair{t}{x}=\kappa
@@ -374,6 +375,8 @@ $\bpair{t}{y}\le\bpair{t}{z}\le\kappa$, čo sme chceli dokázať.
 \end{dokaz}
 
 \end{shaded}
+
+\FIXME{neviem ako, ale v tom pdf co je na stranke sa na 57 a 58 strane neda oznacovat text}
 
 \noindent
 Vráťme sa teraz k nášmu cieľu -- ukázať, že rovnaká hodnota
@@ -462,6 +465,7 @@ body $\alpha\bm{c}$ ležiace na polpriamke generovanej \bm{c} za $K$.
 
 \vspace*{-4ex}
 \noindent
+\FIXME{ja by som ocenil toto lepsie vysvetlit, lebo tomu velmi nechapem}
 Platí to aj naopak. Zoberme si hocijaký bod $\alpha\bm{c}$ ležiaci za $K$. Podľa Lemy~\ref{lm:KO:2}
 existuje nadrovina $\cal H$ taká, že všetky body z $K$ ležia pod ňou. Nech $\cal H$ je tvorená
 bodmi \bm{y} spĺňajúcimi $\bpair{x}{y}=1$ pre nejaký vektor \bm{x}, potom platí $A\bm{x}\le1$.
@@ -580,7 +584,7 @@ Načrtli sme\footnote{pre kompletný dôkaz treba ošetriť ešte niekoľko
       \item (P) ani (D) nemajú žiadne prípustné riešenie
       \item (P) je neohraničený a (D) nemá prípustné riešenie
       \item (D) je neohraničený a (P) nemá prípustné riešenie
-      \item (P) aj (D) majú prípustné riešenie. V tom prípade sa optimálne hodnoty (P) a (D) rovanjú.
+      \item (P) aj (D) majú prípustné riešenie. V tom prípade sa optimálne hodnoty (P) a (D) rovnajú.
     \end{enumerate}
   \end{veta}
 \end{framed}
